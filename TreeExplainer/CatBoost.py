@@ -17,7 +17,6 @@ def catBoostSHAP(
     loop_its=10,
     val_size=0.2,
     stratify=None,
-    include_all=False,
     random_seed_start = 0
 ):
     Shaps = np.array([])
@@ -78,6 +77,7 @@ def catBoostSHAP(
 # power_req_iterations: The fractional power percentage for the required iterations calculation
 # automatic: If true, the PowerSHAP will first calculate the required iterations by using ten iterations and then restart using the required iterations for power_alpha (Boolean)
 # limit_automatic: sets a limit to the maximum allowed iterations (int)
+# limit_incremental_iterations: if the required iterations exceed limit_automatic in automatic mode, add limit_incremental_iterations iterations and re-evaluate. 
 # limit_recursive_automatic: restricts the amount of automatic PowerSHAP recursion (int)
 def PowerSHAP(
     input_df,
@@ -93,6 +93,7 @@ def PowerSHAP(
     power_req_iterations=0.95,
     automatic=False,
     limit_automatic=None,
+    limit_incremental_iterations=10,
     limit_recursive_automatic=3,
 ):
     print("Starting PowerSHAP")
@@ -134,7 +135,6 @@ def PowerSHAP(
         loop_its=loop_its,
         val_size=val_size,
         stratify=stratify,
-        include_all=False,
         random_seed_start = 0
     )
 
@@ -154,7 +154,9 @@ def PowerSHAP(
 
         if max_iterations < max_iterations_old:
             print(
-                str(loop_its)+" iterations were sufficient already as only "+str(max_iterations)+" iterations were required for the current power_alpha."
+                str(loop_its)+" iterations were already sufficient as only " 
+                + str(max_iterations) 
+                + " iterations were required for the current power_alpha = "+ str(power_alpha) + "."
             )
 
         while (
@@ -165,25 +167,26 @@ def PowerSHAP(
 
             if max_iterations > limit_automatic:
                 print(
-                    "The required iterations exceed the limit_automatic threshold. PowerSHAP will continue with only "
-                    + str(limit_automatic)
-                    + " iterations."
+                    "Automatic mode: PowerSHAP Requires " 
+                    + str(max_iterations) + " iterations; "
+                    + "The required iterations exceed the limit_automatic threshold. PowerSHAP will add "
+                    + str(limit_incremental_iterations) + " PowerSHAP iterations and re-evaluate."
                 )
-                processed_shaps_df = PowerSHAP(
-                    input_df=current_df,
-                    feature_columns=feature_columns,
-                    target_column=target_column,
+
+                shaps_df_recursive = catBoostSHAP(
+                    current_df,
+                    model,
+                    target_column,
+                    feature_columns_random=columns_list_current,
                     index_column=index_column,
-                    model=model,
-                    powershap_iterations=limit_automatic,
+                    loop_its=limit_incremental_iterations,
                     val_size=val_size,
                     stratify=stratify,
-                    power_alpha=power_alpha,
-                    include_all=True,
-                    power_req_iterations=power_req_iterations,
-                    automatic=False,
+                    random_seed_start = max_iterations_old
                 )
-                recurs_counter = limit_recursive_automatic
+
+                max_iterations_old = max_iterations_old + limit_incremental_iterations
+
             else:
                 print(
                     "Automatic mode: PowerSHAP Requires "+str(max_iterations) + " iterations; Adding "
@@ -200,38 +203,24 @@ def PowerSHAP(
                     loop_its=max_iterations-max_iterations_old,
                     val_size=val_size,
                     stratify=stratify,
-                    include_all=False,
                     random_seed_start = max_iterations_old
                 )
 
-                shaps_df = shaps_df.append(shaps_df_recursive)
-
-                processed_shaps_df = base_functions.powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,include_all)
-                
-                # processed_shaps_df = PowerSHAP(
-                #     input_df=current_df,
-                #     feature_columns=feature_columns,
-                #     target_column=target_column,
-                #     index_column=index_column,
-                #     model=model,
-                #     powershap_iterations=max_iterations,
-                #     val_size=val_size,
-                #     stratify=stratify,
-                #     power_alpha=power_alpha,
-                #     include_all=True,
-                #     power_req_iterations=power_req_iterations,
-                #     automatic=False,
-                # )
-
                 max_iterations_old = max_iterations
-                max_iterations = int(
-                    np.ceil(
-                        processed_shaps_df[processed_shaps_df.p_value < power_alpha][
-                            str(power_req_iterations)+"_power_its_req"
-                        ].max()
-                    )
+
+            shaps_df = shaps_df.append(shaps_df_recursive)
+
+            processed_shaps_df = base_functions.powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,include_all)
+            
+            max_iterations = int(
+                np.ceil(
+                    processed_shaps_df[processed_shaps_df.p_value < power_alpha][
+                        str(power_req_iterations)+"_power_its_req"
+                    ].max()
                 )
-                recurs_counter = recurs_counter + 1
+            )
+
+            recurs_counter = recurs_counter+1
 
     print("Done!")
     if include_all:
