@@ -5,6 +5,7 @@ import pandas as pd
 
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
+from sklearn.utils.validation import check_is_fitted
 
 from copy import deepcopy
 
@@ -87,10 +88,8 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                 limit_automatic != None
             ), '"limit_automatic" must be specified when automatic mode is used!'
 
-        # Metrics that are set when fitting the PowerSHAP feature selector
+        # Log the column names for more interpretable column values
         self._input_names = None
-        self._processed_shaps_df = None
-        self._p_values = None  # TODO
 
     def _print(self, *values):
         """Helper method for printing if `verbose` is set to True."""
@@ -226,7 +225,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         self._print("Done!")
 
         self._processed_shaps_df = processed_shaps_df.copy()
-        if not self._input_names is None:
+        if self._input_names is not None:
             self._processed_shaps_df.index = [
                 self._input_names[i] if isinstance(i, int) else i
                 for i in processed_shaps_df.index.values
@@ -248,3 +247,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
     def _get_support_mask(self):
         # Select the significant features
         return self._p_values < self.power_alpha
+
+    def transform(self, X):
+        check_is_fitted(self, ['_processed_shaps_df', '_p_values'])
+        if self._input_names is not None and isinstance(X, pd.DataFrame):
+            assert np.all(X.columns.values == self._input_names)
+        return super().transform(X)
