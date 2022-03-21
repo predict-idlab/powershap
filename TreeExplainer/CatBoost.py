@@ -15,6 +15,7 @@ def catBoostSHAP(
     feature_columns_random=None,
     index_column=None,
     loop_its=10,
+    split_data=True,
     val_size=0.2,
     stratify=None,
     random_seed_start = 0
@@ -27,12 +28,16 @@ def catBoostSHAP(
         random_uniform_feature = npRandomState.uniform(-1, 1, len(current_df))
         current_df["random_uniform_feature"] = random_uniform_feature
 
-        train_idx, val_idx = train_test_split(
-            current_df[index_column].unique(),
-            test_size=val_size,
-            random_state=i,
-            stratify=stratify,
-        )
+        if split_data:
+            train_idx, val_idx = train_test_split(
+                current_df[index_column].unique(),
+                test_size=val_size,
+                random_state=i,
+                stratify=stratify,
+            )
+        else:
+            train_idx = current_df[index_column].unique()
+            val_idx = current_df[index_column].unique()
 
         X_train = current_df[current_df[index_column].isin(train_idx)].copy(deep=True)
         X_val = current_df[current_df[index_column].isin(val_idx)].copy(deep=True)
@@ -75,6 +80,7 @@ def catBoostSHAP(
 # include_all: If false, this method will output all features with a threshold of power_alpha (Boolean)
 # power_alpha: The alpha value used for the power-calculation of the used statistical test and significance threshold (float between ]0,1[)
 # power_req_iterations: The fractional power percentage for the required iterations calculation
+# split_data: If false, the data will not be split into a validation set and Powershap will only use the training data
 # automatic: If true, the PowerSHAP will first calculate the required iterations by using ten iterations and then restart using the required iterations for power_alpha (Boolean)
 # limit_automatic: sets a limit to the maximum allowed iterations (int)
 # limit_incremental_iterations: if the required iterations exceed limit_automatic in automatic mode, add limit_incremental_iterations iterations and re-evaluate. 
@@ -91,6 +97,7 @@ def PowerSHAP(
     power_alpha=0.01,
     include_all=False,
     power_req_iterations=0.95,
+    split_data=True,
     automatic=False,
     limit_automatic=None,
     limit_incremental_iterations=10,
@@ -133,6 +140,7 @@ def PowerSHAP(
         feature_columns_random=columns_list_current,
         index_column=index_column,
         loop_its=loop_its,
+        split_data = split_data,
         val_size=val_size,
         stratify=stratify,
         random_seed_start = 0
@@ -152,7 +160,7 @@ def PowerSHAP(
         max_iterations_old = loop_its
         recurs_counter = 0
 
-        if max_iterations < max_iterations_old:
+        if max_iterations <= max_iterations_old:
             print(
                 str(loop_its)+" iterations were already sufficient as only " 
                 + str(max_iterations) 
@@ -193,6 +201,10 @@ def PowerSHAP(
                     + str(max_iterations-max_iterations_old)
                     + " PowerSHAP iterations."
                 )
+
+                if max_iterations-max_iterations_old==1:
+                    max_iterations = max_iterations + 1
+                    print("Adding another iteration to have at least two iterations.")
 
                 shaps_df_recursive = catBoostSHAP(
                     current_df,
