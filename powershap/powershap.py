@@ -31,9 +31,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         limit_automatic: int = None,
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
-        stratify: bool = False,  # TODO
+        stratify: bool = False,
         verbose: bool = False,
-        model_kwargs: dict = None,  # TODO
+        **fit_kwargs,
     ):
         """
         Create a PowerSHAP object.
@@ -72,10 +72,21 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         limit_recursive_automatic: int, optional
             The number of maximum allowed times that `limit_incremental_iterations`
             iterations are added. This restricts the amount of PowerSHAP recursion. By
-            default 3 .
+            default 3.
+        stratify: bool, optional
+            Whether to create a stratified train_test_split (based on the `y` that is
+            given to the `.fit` method). By default False.
+            ..note::
+                If you want to pass a specific array as stratify (that is not `y`), you
+                can pass it as `stratify` argument to the `.fit` method.
         verbose: bool, optional
             Flag indicating whether verbose console output should be shown. By default
             False.
+        **fit_kwargs: dict
+            Keyword arguments for fitting the model.
+            ..note::
+                For a deep learning model, the following keyword arguments are required:
+                "epochs", "optimizer", "batch_size", "nn_metric", "loss"
 
         """
         self.model = model
@@ -90,7 +101,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         self.limit_recursive_automatic = limit_recursive_automatic
         self.stratify = stratify
         self.verbose = verbose
-        self.model_kwargs = model_kwargs
+        self.fit_kwargs = fit_kwargs
 
         self._explainer = ShapExplainerFactory.get_explainer(model=model)
 
@@ -107,9 +118,11 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         if self.verbose:
             print(*values)
 
-    def fit(self, X, y, stratify=None, cv=None):
-        if stratify is None:
-            stratify = self.stratify
+    def fit(self, X, y, stratify=None, cv=None, **kwargs):
+        if stratify is None and self.stratify:
+            # Set stratify to y, if no stratify is given and self.stratify is True
+            stratify = y
+        kwargs.update(self.fit_kwargs)  # is inplace operation
 
         # Log the column names if X is a dataframe
         if isinstance(X, pd.DataFrame):
@@ -135,7 +148,8 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             y=y,
             loop_its=loop_its,
             val_size=self.val_size,
-            stratify=None,  # TODO: do this automatically?
+            stratify=stratify,
+            **kwargs,
         )
         processed_shaps_df = powerSHAP_statistical_analysis(
             shaps_df,
@@ -184,8 +198,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                         y=y,
                         loop_its=self.limit_incremental_iterations,
                         val_size=self.val_size,
-                        stratify=None,  # TODO: do this automatically?
+                        stratify=stratify,
                         random_seed_start=max_iterations_old,
+                        **kwargs,
                     )
 
                     max_iterations_old = (
@@ -204,8 +219,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                         y=y,
                         loop_its=max_iterations - max_iterations_old,
                         val_size=self.val_size,
-                        stratify=None,  # TODO: do this automatically?
+                        stratify=stratify,
                         random_seed_start=max_iterations_old,
+                        **kwargs,
                     )
 
                     max_iterations_old = max_iterations

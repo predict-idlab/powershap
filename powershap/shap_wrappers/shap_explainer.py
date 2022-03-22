@@ -32,7 +32,9 @@ class ShapExplainer(ABC):
         self.model = model
 
     # Should be implemented by subclass
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed) -> np.ndarray:
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
         raise NotImplementedError
 
     # Should be implemented by subclass
@@ -55,14 +57,13 @@ class ShapExplainer(ABC):
 
     def explain(
         self,
-        X: pd.DataFrame,  #     current_df,
-        y: np.array,  #    target_column,
-        # feature_columns_random=None,
-        # index_column=None,
+        X: pd.DataFrame,
+        y: np.array,
         loop_its: int,
         val_size: float,
-        stratify=None,
-        random_seed_start=0,
+        stratify: np.array = None,
+        random_seed_start: int = 0,
+        **kwargs,
     ) -> pd.DataFrame:
         """Get the shap values,
 
@@ -77,14 +78,19 @@ class ShapExplainer(ABC):
             feature.
         val_size: float
             The fractional size of the validation set. Should be a float between ]0,1[.
+        stratify: np.array, optional
+            The array used to create a stratified train_test_split. By default None.
+        random_seed_start: int, optional
+            The random seed to start the iterations with. By default 0.
+        **kwargs: dict
+            The keyword arguments for the fit method.
         """
         random_col_name = "random_uniform_feature"
         assert not random_col_name in X.columns
 
         X = X.copy(deep=True)
 
-        # shaps = np.array([])  # TODO: pre-allocate for efficiency
-        shaps = []
+        shaps = []  # TODO: pre-allocate for efficiency
 
         for i in tqdm(range(loop_its)):
             npRandomState = RandomState(i + random_seed_start)
@@ -111,6 +117,7 @@ class ShapExplainer(ABC):
                 X_val=X_val.values,
                 Y_val=Y_val,
                 random_seed=i + random_seed_start,
+                **kwargs,
             )
 
             Shap_values = np.abs(Shap_values)
@@ -134,7 +141,9 @@ class CatboostExplainer(ShapExplainer):
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed) -> np.array:
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
         # Fit the model
         PowerSHAP_model = self.model.copy().set_params(random_seed=random_seed)
         PowerSHAP_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
@@ -158,7 +167,9 @@ class EnsembleExplainer(ShapExplainer):
         supported_models = [ForestRegressor, ForestClassifier, BaseGradientBoosting]
         return isinstance(model, tuple(supported_models))
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed) -> np.array:
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
         from sklearn.base import clone
 
         # Fit the model
@@ -181,7 +192,9 @@ class LinearExplainer(ShapExplainer):
         supported_models = [LinearClassifierMixin, LinearModel, BaseSGD]
         return isinstance(model, tuple(supported_models))
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed) -> np.array:
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
         from sklearn.base import clone
 
         # Fit the model
@@ -203,22 +216,30 @@ class DeepLearningExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
         import tensorflow as tf
-        import torch
 
-        supported_models = [tf.keras.Model, torch.nn.Module]
+        # import torch  ## TODO: do we support pytorch??
+
+        supported_models = [tf.keras.Model]  # , torch.nn.Module]
         return isinstance(model, tuple(supported_models))
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed) -> np.ndarray:
-
-        raise NotImplementedError  # TODO pass the model_kwargs
-        # PowerSHAP_model = self.model
-        # PowerSHAP_model.compile(
-        #     loss=loss,
-        #     optimizer=optimizer,
-        #     metrics=[nn_metric],
-        # )
-        # _ = PowerSHAP_model.fit(X_train,Y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_val_feat,Y_val),verbose=False)
-
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
+        # Fit the model
+        PowerSHAP_model = self.model
+        PowerSHAP_model.compile(
+            loss=kwargs["loss"],
+            optimizer=kwargs["optimizer"],
+            metrics=[kwargs["nn_metric"]],
+        )
+        _ = PowerSHAP_model.fit(
+            X_train,
+            Y_train,
+            batch_size=kwargs["batch_size"],
+            epochs=kwargs["epochs"],
+            validation_data=(X_val, Y_val),
+            verbose=False,
+        )
+        # Calculate the shap values
         C_explainer = shap.DeepExplainer(PowerSHAP_model, X_train)
-
-        return C_explainer.shap_values(X_val)[0]
+        return C_explainer.shap_values(X_val)[0]  # TODO: why [0]?
