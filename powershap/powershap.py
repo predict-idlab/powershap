@@ -8,9 +8,9 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
 from copy import deepcopy
-from shap_wrappers import ShapExplainerFactory
+from .shap_wrappers import ShapExplainerFactory
 
-from utils import powerSHAP_statistical_analysis
+from .utils import powerSHAP_statistical_analysis
 
 
 class PowerSHAP(SelectorMixin, BaseEstimator):
