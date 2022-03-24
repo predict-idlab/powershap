@@ -1,3 +1,3 @@
 # The init file for PowerSHAP
 
-from powershap import PowerSHAP
+from .powershap import PowerSHAP
