@@ -96,10 +96,10 @@ def PowerSHAP(
     stratify=None,
     power_alpha=0.01,
     include_all=False,
-    power_req_iterations=0.95,
+    power_req_iterations=0.99,
     split_data=True,
     automatic=False,
-    limit_automatic=None,
+    limit_automatic=10,
     limit_incremental_iterations=10,
     limit_recursive_automatic=3,
 ):
@@ -173,11 +173,11 @@ def PowerSHAP(
                 and recurs_counter < limit_recursive_automatic
             ):
 
-            if max_iterations > limit_automatic:
+            if max_iterations-max_iterations_old > limit_automatic:
                 print(
                     "Automatic mode: PowerSHAP Requires " 
                     + str(max_iterations) + " iterations; "
-                    + "The required iterations exceed the limit_automatic threshold. PowerSHAP will add "
+                    + "The extra required iterations ("+str(max_iterations-max_iterations_old)+") exceed the limit_automatic threshold "+ str(limit_automatic) + ". PowerSHAP will add "
                     + str(limit_incremental_iterations) + " PowerSHAP iterations and re-evaluate."
                 )
 

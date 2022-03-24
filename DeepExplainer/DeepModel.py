@@ -265,8 +265,7 @@ def PowerSHAP(
             shaps_df = shaps_df.append(shaps_df_recursive)
 
             processed_shaps_df = base_functions.powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,include_all)
-            
-            max_iterations = int(
+            max_iterations = int(   
                 np.ceil(
                     processed_shaps_df[processed_shaps_df.p_value < power_alpha][
                         str(power_req_iterations)+"_power_its_req"

@@ -25,10 +25,10 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         power_iterations: int = 10,
         power_alpha: float = 0.01,
         val_size: float = 0.2,
-        power_req_iterations: float = 0.95,
+        power_req_iterations: float = 0.99,
         include_all: bool = False,
         automatic: bool = False,
-        limit_automatic: int = None,
+        limit_automatic: int = 10,
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
         stratify: bool = False,
@@ -151,6 +151,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             stratify=stratify,
             **kwargs,
         )
+
         processed_shaps_df = powerSHAP_statistical_analysis(
             shaps_df,
             self.power_alpha,
@@ -173,7 +174,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             if max_iterations < max_iterations_old:
                 self._print(
                     f"{loop_its} iterations were already sufficient as only",
-                    f"{max_iterations} iterations were required for the current",
+                    f"{max_iterations} iterations were required for the current ",
                     f"power_alpha = {self.power_alpha}.",
                 )
 
@@ -183,13 +184,13 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                 and recurs_counter < self.limit_recursive_automatic
             ):
 
-                shaps_df_recursive: pd.DataFrame = None
-                if max_iterations > self.limit_automatic:
+                shaps_df_recursive: pd.DataFrame = None 
+                if max_iterations-max_iterations_old > self.limit_automatic:
                     self._print(
-                        f"Automatic mode: PowerSHAP Requires {max_iterations}",
-                        "iterations; The required iterations exceed the limit_automatic",
-                        "threshold. PowerSHAP will add",
-                        f"{self.limit_incremental_iterations} PowerSHAP iterations and",
+                        f"Automatic mode: PowerSHAP Requires {max_iterations} ",
+                        "iterations; The extra required iterations exceed the limit_automatic ",
+                        "threshold. PowerSHAP will add ",
+                        f"{self.limit_incremental_iterations} PowerSHAP iterations and ",
                         "re-evaluate.",
                     )
 
@@ -209,8 +210,8 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
                 else:
                     self._print(
-                        f"Automatic mode: PowerSHAP Requires {max_iterations}"
-                        f"iterations; Adding {max_iterations-max_iterations_old}",
+                        f"Automatic mode: PowerSHAP Requires {max_iterations} "
+                        f"iterations; Adding {max_iterations-max_iterations_old} ",
                         "PowerSHAP iterations.",
                     )
 
