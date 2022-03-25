@@ -8,9 +8,9 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
 from copy import deepcopy
-from .shap_wrappers import ShapExplainerFactory
+from shap_wrappers import ShapExplainerFactory
 
-from .utils import powerSHAP_statistical_analysis
+from utils import powerSHAP_statistical_analysis
 
 
 class PowerSHAP(SelectorMixin, BaseEstimator):
@@ -160,18 +160,22 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         )
 
         if self.automatic:
-            max_iterations = int(
-                np.ceil(
-                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
-                        str(self.power_req_iterations) + "_power_its_req"
-                    ].max()
+            #in the case no features were deemed important
+            try:
+                max_iterations = int(
+                    np.ceil(
+                        processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                            str(self.power_req_iterations) + "_power_its_req"
+                        ].max()
+                    )
                 )
-            )
+            except:
+                max_iterations = 10
 
             max_iterations_old = loop_its
             recurs_counter = 0
 
-            if max_iterations < max_iterations_old:
+            if max_iterations <= max_iterations_old:
                 self._print(
                     f"{loop_its} iterations were already sufficient as only",
                     f"{max_iterations} iterations were required for the current ",
@@ -236,13 +240,18 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                     include_all=self.include_all,
                 )
 
-                max_iterations = int(
-                    np.ceil(
-                        processed_shaps_df[
-                            processed_shaps_df.p_value < self.power_alpha
-                        ][str(self.power_req_iterations) + "_power_its_req"].max()
+                try:
+
+                    max_iterations = int(
+                        np.ceil(
+                            processed_shaps_df[
+                                processed_shaps_df.p_value < self.power_alpha
+                            ][str(self.power_req_iterations) + "_power_its_req"].max()
+                        )
                     )
-                )
+                except:
+                    #this means no informative features were selected
+                    max_iterations = max_iterations_old 
 
                 recurs_counter = recurs_counter + 1
 
