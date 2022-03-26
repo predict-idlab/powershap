@@ -177,7 +177,10 @@ class EnsembleExplainer(ShapExplainer):
         PowerSHAP_model.fit(X_train, Y_train)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerSHAP_model)
-        return C_explainer.shap_values(X_val)
+        try:
+            return C_explainer.shap_values(X_val)[1]
+        except:
+            return C_explainer.shap_values(X_val)
 
 
 ### LINEAR
