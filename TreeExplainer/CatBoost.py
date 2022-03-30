@@ -149,13 +149,16 @@ def PowerSHAP(
     processed_shaps_df = base_functions.powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,include_all)
 
     if automatic:
-        max_iterations = int(
-            np.ceil(
-                processed_shaps_df[processed_shaps_df.p_value < power_alpha][
-                    str(power_req_iterations)+"_power_its_req"
-                ].max()
+        try:
+            max_iterations = int(
+                np.ceil(
+                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                        str(self.power_req_iterations) + "_power_its_req"
+                    ].max()
+                )
             )
-        )
+        except:
+            max_iterations = 10
 
         max_iterations_old = loop_its
         recurs_counter = 0
@@ -224,13 +227,17 @@ def PowerSHAP(
 
             processed_shaps_df = base_functions.powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,include_all)
             
-            max_iterations = int(
-                np.ceil(
-                    processed_shaps_df[processed_shaps_df.p_value < power_alpha][
-                        str(power_req_iterations)+"_power_its_req"
-                    ].max()
+            try:
+                max_iterations = int(
+                    np.ceil(
+                        processed_shaps_df[
+                            processed_shaps_df.p_value < self.power_alpha
+                        ][str(self.power_req_iterations) + "_power_its_req"].max()
+                    )
                 )
-            )
+            except:
+                #this means no informative features were selected
+                max_iterations = max_iterations_old 
 
             recurs_counter = recurs_counter+1
 

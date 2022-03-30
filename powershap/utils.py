@@ -6,9 +6,7 @@ import numpy as np
 from scipy import stats
 from statsmodels.stats.power import TTestPower
 
-
 def p_values_arg_coef(coefficients, arg):
-    # inverse of quantile
     return stats.percentileofscore(coefficients, arg)
 
 
@@ -23,26 +21,25 @@ def powerSHAP_statistical_analysis(
     power_list = []
     required_iterations = []
     n_samples = len(shaps_df["random_uniform_feature"].values)
-    mean_random_uniform = shaps_df["random_uniform_feature"].values.mean()
+    mean_random_uniform = shaps_df["random_uniform_feature"].mean()
     for i in range(len(shaps_df.columns)):
-        quantile = (
+        p_value = (
             p_values_arg_coef(np.array(shaps_df.values[:, i]), mean_random_uniform)
             / 100
         )
-        p_value = quantile
+
         p_values.append(p_value)
 
         if include_all or p_value < power_alpha:
             pooled_standard_deviation = np.sqrt(
                 (
-                    (shaps_df.std().values[i] ** 2) * (n_samples - 1)
-                    + (n_samples - 1)
-                    * (shaps_df["random_uniform_feature"].values.std() ** 2)
+                    (shaps_df.std().values[i] ** 2) 
+                    + (shaps_df["random_uniform_feature"].std() ** 2)
                 )
-                / (n_samples * 2 - 2)
+                / (2)
             )
             effect_size.append(
-                (np.abs(shaps_df.mean().values[i] - mean_random_uniform))
+                (mean_random_uniform - shaps_df.mean().values[i])
                 / pooled_standard_deviation
             )
             power_list.append(
@@ -51,7 +48,7 @@ def powerSHAP_statistical_analysis(
                     nobs=n_samples,
                     alpha=power_alpha,
                     df=None,
-                    alternative="larger",
+                    alternative="smaller",
                 )
             )
             if shaps_df.columns[i] == "random_uniform_feature":
@@ -63,7 +60,7 @@ def powerSHAP_statistical_analysis(
                         nobs=None,
                         alpha=power_alpha,
                         power=power_req_iterations,
-                        alternative="larger",
+                        alternative="smaller",
                     )
                 )
 

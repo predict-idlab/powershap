@@ -33,14 +33,13 @@ def powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,inc
 	    if include_all or p_value < power_alpha:
 	        pooled_standard_deviation = np.sqrt(
 	            (
-	                (shaps_df.std()[i] ** 2) * (n_samples - 1)
-	                + (n_samples - 1)
-	                * (shaps_df["random_uniform_feature"].values.std() ** 2)
+	                (shaps_df.std()[i] ** 2) 
+	                + (shaps_df["random_uniform_feature"].values.std() ** 2)
 	            )
-	            / (n_samples * 2 - 2)
+	            / (2)
 	        )
 	        effect_size.append(
-	            (np.abs(shaps_df.mean()[i] - mean_random_uniform))
+	            (mean_random_uniform - shaps_df.mean()[i])
 	            / pooled_standard_deviation
 	        )
 	        power_list.append(
@@ -49,7 +48,7 @@ def powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,inc
 	                nobs=n_samples,
 	                alpha=power_alpha,
 	                df=None,
-	                alternative="larger",
+	                alternative="smaller",
 	            )
 	        )
 	        if shaps_df.columns[i] == "random_uniform_feature":
@@ -61,7 +60,7 @@ def powerSHAP_statistical_analysis(shaps_df,power_alpha,power_req_iterations,inc
 	                    nobs=None,
 	                    alpha=power_alpha,
 	                    power=power_req_iterations,
-	                    alternative="larger",
+	                    alternative="smaller",
 	                )
 	            )
 

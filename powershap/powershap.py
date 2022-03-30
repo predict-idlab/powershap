@@ -8,9 +8,9 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
 from copy import deepcopy
-from shap_wrappers import ShapExplainerFactory
+from .shap_wrappers import ShapExplainerFactory
 
-from utils import powerSHAP_statistical_analysis
+from .utils import powerSHAP_statistical_analysis
 
 
 class PowerSHAP(SelectorMixin, BaseEstimator):
@@ -28,6 +28,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         power_req_iterations: float = 0.99,
         include_all: bool = False,
         automatic: bool = False,
+        force_convergence: bool = False,
         limit_automatic: int = 10,
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
@@ -96,6 +97,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         self.power_req_iterations = power_req_iterations
         self.include_all = include_all
         self.automatic = automatic
+        self.force_convergence = force_convergence
         self.limit_automatic = limit_automatic
         self.limit_incremental_iterations = limit_incremental_iterations
         self.limit_recursive_automatic = limit_recursive_automatic
@@ -117,6 +119,107 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         """Helper method for printing if `verbose` is set to True."""
         if self.verbose:
             print(*values)
+
+    def _automatic_fit(self,X,y,processed_shaps_df,loop_its,stratify,shaps_df,**kwargs):
+        #in the case no features were deemed important
+        try:
+            max_iterations = int(
+                np.ceil(
+                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                        str(self.power_req_iterations) + "_power_its_req"
+                    ].max()
+                )
+            )
+        except:
+            max_iterations = 10
+
+        max_iterations_old = loop_its
+        recurs_counter = 0
+
+        if max_iterations <= max_iterations_old:
+            self._print(
+                f"{loop_its} iterations were already sufficient as only",
+                f"{max_iterations} iterations were required for the current ",
+                f"power_alpha = {self.power_alpha}.",
+            )
+
+        while (
+            max_iterations > max_iterations_old
+            # and max_iterations < limit_automatic
+            and recurs_counter < self.limit_recursive_automatic
+        ):
+
+            shaps_df_recursive: pd.DataFrame = None 
+            if max_iterations-max_iterations_old > self.limit_automatic:
+                self._print(
+                    f"Automatic mode: PowerSHAP Requires {max_iterations} ",
+                    "iterations; The extra required iterations exceed the limit_automatic ",
+                    "threshold. PowerSHAP will add ",
+                    f"{self.limit_incremental_iterations} PowerSHAP iterations and ",
+                    "re-evaluate.",
+                )
+
+                shaps_df_recursive = self._explainer.explain(
+                    X=X,
+                    y=y,
+                    loop_its=self.limit_incremental_iterations,
+                    val_size=self.val_size,
+                    stratify=stratify,
+                    random_seed_start=max_iterations_old,
+                    **kwargs,
+                )
+
+                max_iterations_old = (
+                    max_iterations_old + self.limit_incremental_iterations
+                )
+
+            else:
+                self._print(
+                    f"Automatic mode: PowerSHAP Requires {max_iterations} "
+                    f"iterations; Adding {max_iterations-max_iterations_old} ",
+                    "PowerSHAP iterations.",
+                )
+
+                shaps_df_recursive = self._explainer.explain(
+                    X=X,
+                    y=y,
+                    loop_its=max_iterations - max_iterations_old,
+                    val_size=self.val_size,
+                    stratify=stratify,
+                    random_seed_start=max_iterations_old,
+                    **kwargs,
+                )
+
+                max_iterations_old = max_iterations
+
+            shaps_df = shaps_df.append(shaps_df_recursive)
+
+            processed_shaps_df = powerSHAP_statistical_analysis(
+                shaps_df,
+                self.power_alpha,
+                self.power_req_iterations,
+                include_all=self.include_all,
+            )
+
+            try:
+
+                max_iterations = int(
+                    np.ceil(
+                        processed_shaps_df[
+                            processed_shaps_df.p_value < self.power_alpha
+                        ][str(self.power_req_iterations) + "_power_its_req"].max()
+                    )
+                )
+            except:
+                #this means no informative features were selected
+                max_iterations = max_iterations_old 
+
+            recurs_counter = recurs_counter + 1
+
+        return processed_shaps_df
+
+
+
 
     def fit(self, X, y, stratify=None, cv=None, **kwargs):
         if stratify is None and self.stratify:
@@ -160,100 +263,60 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         )
 
         if self.automatic:
-            #in the case no features were deemed important
-            try:
-                max_iterations = int(
-                    np.ceil(
-                        processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
-                            str(self.power_req_iterations) + "_power_its_req"
-                        ].max()
-                    )
-                )
-            except:
-                max_iterations = 10
 
-            max_iterations_old = loop_its
-            recurs_counter = 0
+            processed_shaps_df = self._automatic_fit(
+                X=X,
+                y=y,
+                processed_shaps_df=processed_shaps_df,
+                loop_its=loop_its,
+                stratify=stratify,
+                shaps_df=shaps_df,
+                **kwargs
+            )
 
-            if max_iterations <= max_iterations_old:
-                self._print(
-                    f"{loop_its} iterations were already sufficient as only",
-                    f"{max_iterations} iterations were required for the current ",
-                    f"power_alpha = {self.power_alpha}.",
-                )
 
-            while (
-                max_iterations > max_iterations_old
-                # and max_iterations < limit_automatic
-                and recurs_counter < self.limit_recursive_automatic
-            ):
+            # Continue powershap until no more informative features are found
+            if self.force_convergence:
+                self._print("Forcing convergence.")
 
-                shaps_df_recursive: pd.DataFrame = None 
-                if max_iterations-max_iterations_old > self.limit_automatic:
-                    self._print(
-                        f"Automatic mode: PowerSHAP Requires {max_iterations} ",
-                        "iterations; The extra required iterations exceed the limit_automatic ",
-                        "threshold. PowerSHAP will add ",
-                        f"{self.limit_incremental_iterations} PowerSHAP iterations and ",
-                        "re-evaluate.",
-                    )
+                converge_df = processed_shaps_df.copy()
 
-                    shaps_df_recursive = self._explainer.explain(
-                        X=X,
+                significant_cols = np.array(converge_df[converge_df.p_value < self.power_alpha].index.values)
+
+                while(len(converge_df[converge_df.p_value < self.power_alpha])>0):
+                    self._print("Rerunning powershap for convergence. ")
+                    converge_shaps_df = self._explainer.explain(
+                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
                         y=y,
-                        loop_its=self.limit_incremental_iterations,
+                        loop_its=loop_its,
                         val_size=self.val_size,
                         stratify=stratify,
-                        random_seed_start=max_iterations_old,
                         **kwargs,
                     )
 
-                    max_iterations_old = (
-                        max_iterations_old + self.limit_incremental_iterations
+                    converge_df = powerSHAP_statistical_analysis(
+                        converge_shaps_df,
+                        self.power_alpha,
+                        self.power_req_iterations,
+                        include_all=self.include_all,
                     )
 
-                else:
-                    self._print(
-                        f"Automatic mode: PowerSHAP Requires {max_iterations} "
-                        f"iterations; Adding {max_iterations-max_iterations_old} ",
-                        "PowerSHAP iterations.",
-                    )
-
-                    shaps_df_recursive = self._explainer.explain(
-                        X=X,
+                    converge_df = self._automatic_fit(
+                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
                         y=y,
-                        loop_its=max_iterations - max_iterations_old,
-                        val_size=self.val_size,
+                        processed_shaps_df=converge_df,
+                        loop_its=loop_its,
                         stratify=stratify,
-                        random_seed_start=max_iterations_old,
-                        **kwargs,
+                        converge_shaps_df=converge_shaps_df,
+                        shaps_df=converge_shaps_df,
+                        **kwargs
                     )
 
-                    max_iterations_old = max_iterations
+                    significant_cols = np.append(significant_cols,converge_df[converge_df.p_value < self.power_alpha].index.values)
 
-                shaps_df = shaps_df.append(shaps_df_recursive)
+                    processed_shaps_df.loc[converge_df[converge_df.p_value < self.power_alpha].index.values]=converge_df[converge_df.p_value < self.power_alpha]
 
-                processed_shaps_df = powerSHAP_statistical_analysis(
-                    shaps_df,
-                    self.power_alpha,
-                    self.power_req_iterations,
-                    include_all=self.include_all,
-                )
-
-                try:
-
-                    max_iterations = int(
-                        np.ceil(
-                            processed_shaps_df[
-                                processed_shaps_df.p_value < self.power_alpha
-                            ][str(self.power_req_iterations) + "_power_its_req"].max()
-                        )
-                    )
-                except:
-                    #this means no informative features were selected
-                    max_iterations = max_iterations_old 
-
-                recurs_counter = recurs_counter + 1
+                processed_shaps_df.loc[converge_df.index.values]=converge_df
 
         self._print("Done!")
 
