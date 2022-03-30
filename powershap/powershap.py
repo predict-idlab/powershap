@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
 import numpy as np
@@ -7,7 +9,6 @@ from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
-from copy import deepcopy
 from .shap_wrappers import ShapExplainerFactory
 
 from .utils import powerSHAP_statistical_analysis
@@ -118,6 +119,19 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         if self.verbose:
             print(*values)
 
+    def _get_max_iterations(self, processed_shaps_df) -> int | float:
+        if not any(processed_shaps_df.p_value < self.power_alpha):
+            # There is no feature found yet...
+            self._print("No features selected after 10 automatic iterations!")
+            return float("inf")  # positive infinity
+        return int(
+            np.ceil(
+                processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                    str(self.power_req_iterations) + "_power_its_req"
+                ].max()
+            )
+        )
+
     def fit(self, X, y, stratify=None, cv=None, **kwargs):
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
@@ -159,14 +173,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         )
 
         if self.automatic:
-            max_iterations = int(
-                np.ceil(
-                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
-                        str(self.power_req_iterations) + "_power_its_req"
-                    ].max()
-                )
-            )
-
+            max_iterations = self._get_max_iterations(processed_shaps_df)
             max_iterations_old = loop_its
             recurs_counter = 0
 
@@ -226,7 +233,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
                     max_iterations_old = max_iterations
 
-                shaps_df = shaps_df.append(shaps_df_recursive)
+                shaps_df = pd.concat([shaps_df, shaps_df_recursive])
 
                 processed_shaps_df = powerSHAP_statistical_analysis(
                     shaps_df,
@@ -235,25 +242,13 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                     include_all=self.include_all,
                 )
 
-                max_iterations = int(
-                    np.ceil(
-                        processed_shaps_df[
-                            processed_shaps_df.p_value < self.power_alpha
-                        ][str(self.power_req_iterations) + "_power_its_req"].max()
-                    )
-                )
+                max_iterations = self._get_max_iterations(processed_shaps_df)
 
-                recurs_counter = recurs_counter + 1
+                recurs_counter += 1
 
         self._print("Done!")
 
-        self._processed_shaps_df = processed_shaps_df.copy()
-        if self._input_names is not None:
-            self._processed_shaps_df.index = [
-                self._input_names[i] if isinstance(i, int) else i
-                for i in processed_shaps_df.index.values
-            ]
-
+        ## Set the p-values property (used in the transform function)
         # Remove the random feature (legit features have int index)
         sub_df = processed_shaps_df[
             processed_shaps_df.index.map(lambda x: isinstance(x, int))
@@ -261,6 +256,14 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         # Sort to have original order again
         sub_df = sub_df.sort_index()
         self._p_values = sub_df.p_value.values
+
+        ## Store the processed_shaps_df in the object
+        self._processed_shaps_df = processed_shaps_df
+        if self._input_names is not None:
+            self._processed_shaps_df.index = [
+                self._input_names[i] if isinstance(i, int) else i
+                for i in processed_shaps_df.index.values
+            ]
 
         # It is convention to return self
         return self
