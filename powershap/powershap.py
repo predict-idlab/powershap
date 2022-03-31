@@ -11,7 +11,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .shap_wrappers import ShapExplainerFactory
 
-from utils import powerSHAP_statistical_analysis
+from .utils import powerSHAP_statistical_analysis
 
 
 class PowerSHAP(SelectorMixin, BaseEstimator):
