@@ -1,5 +1,7 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
+import warnings
+import sklearn
 import numpy as np
 import pandas as pd
 
@@ -7,8 +9,7 @@ from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
-from copy import deepcopy
-from shap_wrappers import ShapExplainerFactory
+from .shap_wrappers import ShapExplainerFactory
 
 from utils import powerSHAP_statistical_analysis
 
@@ -232,8 +233,24 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             stratify = y
         kwargs.update(self.fit_kwargs)  # is inplace operation
 
+        if sklearn.__version__.startswith("0."):
+            # Log the feature names if we have sklearn 0.x
+            feature_names = np.asarray(X.columns) if hasattr(X, "columns") else None
+            if feature_names is None or len(feature_names) == 0:
+                self.feature_names_in_ = None
+            else:
+                # Check if all feature names of type string
+                types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
+                if len(types) > 1 or types[0] != "str":
+                    self.feature_names_in_ = None
+                    warnings.warn(
+                        "Feature names only support names that are all strings.",
+                        UserWarning,
+                    )
+                else:
+                    self.feature_names_in_ = feature_names
         # Perform the necessary sklearn checks -> X and y are both ndarray
-        # Logs the feature names as well (in self.feature_names_in_)
+        # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x)
         X, y = self._explainer._validate_data(
             self._validate_data, X, y, multi_output=True
         )
