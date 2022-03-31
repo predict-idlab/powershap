@@ -204,6 +204,10 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             )
 
             if any(processed_shaps_df.p_value < self.power_alpha):
+                # There is no feature found yet...
+                self._print("No features selected after 10 automatic iterations!")
+                # Return already as more iterations will only result in including less
+                # features
                 return processed_shaps_df
 
             max_iterations = int(
