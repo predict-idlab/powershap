@@ -8,9 +8,9 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
 
 from copy import deepcopy
-from .shap_wrappers import ShapExplainerFactory
+from shap_wrappers import ShapExplainerFactory
 
-from .utils import powerSHAP_statistical_analysis
+from utils import powerSHAP_statistical_analysis
 
 
 class PowerSHAP(SelectorMixin, BaseEstimator):
@@ -37,12 +37,12 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         **fit_kwargs,
     ):
         """
-        Create a PowerSHAP object.
+        Create a powershap object.
 
         Parameters
         ----------
         model
-            The model used for for the PowerSHAP calculation.
+            The model used for for the powershap calculation.
         power_iterations: int, optional
             The number of shuffles and iterations of the power feature selection method,
             ignored when using automatic mode. By default 10.
@@ -60,10 +60,14 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             Flag indicating whether all features should be analyzed or only those with a
             threshold of `power_alpha`.
         automatic: bool, optional
-            If True, the PowerSHAP will first calculate the required iterations by using
+            If True, the powershap will first calculate the required iterations by using
             10 iterations and then restart using the required iterations for
             `power_iterations`. By default False.
             TODO: dit is dan geen harde limiet (zie hieronder?)
+        force_convergence: bool, optional
+            Only used for automatic mode. If True, powershap will continue delete 
+            the found relevant features and rerun until no more relevant features are found. 
+            This is especially useful in high-dimensional datasets
         limit_automatic: int, optional
             The number of maximum allowed iterations when `automatic` is True. By
             default None, meaning that no limit is applied.
@@ -72,7 +76,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             `limit_incremental_iterations` iterations and re-evaluate. By default 10.
         limit_recursive_automatic: int, optional
             The number of maximum allowed times that `limit_incremental_iterations`
-            iterations are added. This restricts the amount of PowerSHAP recursion. By
+            iterations are added. This restricts the amount of powershap recursion. By
             default 3.
         stratify: bool, optional
             Whether to create a stratified train_test_split (based on the `y` that is
@@ -152,10 +156,10 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             shaps_df_recursive: pd.DataFrame = None 
             if max_iterations-max_iterations_old > self.limit_automatic:
                 self._print(
-                    f"Automatic mode: PowerSHAP Requires {max_iterations} ",
+                    f"Automatic mode: powershap requires {max_iterations} ",
                     "iterations; The extra required iterations exceed the limit_automatic ",
-                    "threshold. PowerSHAP will add ",
-                    f"{self.limit_incremental_iterations} PowerSHAP iterations and ",
+                    "threshold. Powershap will add ",
+                    f"{self.limit_incremental_iterations} powershap iterations and ",
                     "re-evaluate.",
                 )
 
@@ -175,9 +179,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
             else:
                 self._print(
-                    f"Automatic mode: PowerSHAP Requires {max_iterations} "
+                    f"Automatic mode: Powershap requires {max_iterations} "
                     f"iterations; Adding {max_iterations-max_iterations_old} ",
-                    "PowerSHAP iterations.",
+                    "powershap iterations.",
                 )
 
                 shaps_df_recursive = self._explainer.explain(
@@ -234,7 +238,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         # Perform the necessary sklearn checks -> X and y are both ndarray
         X, y = self._validate_data(X, y, multi_output=True)
 
-        self._print("Starting PowerSHAP")
+        self._print("Starting powershap")
 
         X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
@@ -242,7 +246,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         if self.automatic:
             loop_its = 10
             self._print(
-                "Automatic mode enabled: Finding the minimal required PowerSHAP",
+                "Automatic mode enabled: Finding the minimal required powershap",
                 f"iterations for significance of {self.power_alpha}.",
             )
 
