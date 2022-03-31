@@ -116,26 +116,28 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                 limit_automatic != None
             ), '"limit_automatic" must be specified when automatic mode is used!'
 
-        # Log the column names for more interpretable column values
-        self._input_names = None
-
     def _print(self, *values):
         """Helper method for printing if `verbose` is set to True."""
         if self.verbose:
             print(*values)
 
-    def _automatic_fit(self,X,y,processed_shaps_df,loop_its,stratify,shaps_df,**kwargs):
-        #in the case no features were deemed important
-        try:
-            max_iterations = int(
-                np.ceil(
-                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
-                        str(self.power_req_iterations) + "_power_its_req"
-                    ].max()
-                )
+    def _automatic_fit(
+        self, X, y, processed_shaps_df, loop_its, stratify, shaps_df, **kwargs
+    ):
+        if not any(processed_shaps_df.p_value < self.power_alpha):
+            # There is no feature found yet...
+            self._print("No features selected after 10 automatic iterations!")
+            # Return already as more iterations will only result in including less
+            # features
+            return processed_shaps_df
+
+        max_iterations = int(
+            np.ceil(
+                processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                    str(self.power_req_iterations) + "_power_its_req"
+                ].max()
             )
-        except:
-            max_iterations = 10
+        )
 
         max_iterations_old = loop_its
         recurs_counter = 0
@@ -153,8 +155,8 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             and recurs_counter < self.limit_recursive_automatic
         ):
 
-            shaps_df_recursive: pd.DataFrame = None 
-            if max_iterations-max_iterations_old > self.limit_automatic:
+            shaps_df_recursive: pd.DataFrame = None
+            if max_iterations - max_iterations_old > self.limit_automatic:
                 self._print(
                     f"Automatic mode: powershap requires {max_iterations} ",
                     "iterations; The extra required iterations exceed the limit_automatic ",
@@ -196,7 +198,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
                 max_iterations_old = max_iterations
 
-            shaps_df = shaps_df.append(shaps_df_recursive)
+            shaps_df = pd.concat([shaps_df, shaps_df_recursive])
 
             processed_shaps_df = powerSHAP_statistical_analysis(
                 shaps_df,
@@ -205,25 +207,24 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                 include_all=self.include_all,
             )
 
-            try:
+            if any(processed_shaps_df.p_value < self.power_alpha):
+                # There is no feature found yet...
+                self._print("No features selected after 10 automatic iterations!")
+                # Return already as more iterations will only result in including less
+                # features
+                return processed_shaps_df
 
-                max_iterations = int(
-                    np.ceil(
-                        processed_shaps_df[
-                            processed_shaps_df.p_value < self.power_alpha
-                        ][str(self.power_req_iterations) + "_power_its_req"].max()
-                    )
+            max_iterations = int(
+                np.ceil(
+                    processed_shaps_df[processed_shaps_df.p_value < self.power_alpha][
+                        str(self.power_req_iterations) + "_power_its_req"
+                    ].max()
                 )
-            except:
-                #this means no informative features were selected
-                max_iterations = max_iterations_old 
+            )
 
-            recurs_counter = recurs_counter + 1
+            recurs_counter += 1
 
         return processed_shaps_df
-
-
-
 
     def fit(self, X, y, stratify=None, cv=None, **kwargs):
         if stratify is None and self.stratify:
@@ -231,12 +232,11 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             stratify = y
         kwargs.update(self.fit_kwargs)  # is inplace operation
 
-        # Log the column names if X is a dataframe
-        if isinstance(X, pd.DataFrame):
-            self._input_names = X.columns.values
-
         # Perform the necessary sklearn checks -> X and y are both ndarray
-        X, y = self._validate_data(X, y, multi_output=True)
+        # Logs the feature names as well (in self.feature_names_in_)
+        X, y = self._explainer._validate_data(
+            self._validate_data, X, y, multi_output=True
+        )
 
         self._print("Starting powershap")
 
@@ -275,9 +275,8 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                 loop_its=loop_its,
                 stratify=stratify,
                 shaps_df=shaps_df,
-                **kwargs
+                **kwargs,
             )
-
 
             # Continue powershap until no more informative features are found
             if self.force_convergence:
@@ -285,12 +284,16 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
                 converge_df = processed_shaps_df.copy()
 
-                significant_cols = np.array(converge_df[converge_df.p_value < self.power_alpha].index.values)
+                significant_cols = np.array(
+                    converge_df[converge_df.p_value < self.power_alpha].index.values
+                )
 
-                while(len(converge_df[converge_df.p_value < self.power_alpha])>0):
+                while len(converge_df[converge_df.p_value < self.power_alpha]) > 0:
                     self._print("Rerunning powershap for convergence. ")
                     converge_shaps_df = self._explainer.explain(
-                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
+                        X=X.drop(
+                            columns=X.columns.values[significant_cols.astype(np.int32)]
+                        ),
                         y=y,
                         loop_its=loop_its,
                         val_size=self.val_size,
@@ -306,31 +309,34 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                     )
 
                     converge_df = self._automatic_fit(
-                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
+                        X=X.drop(
+                            columns=X.columns.values[significant_cols.astype(np.int32)]
+                        ),
                         y=y,
                         processed_shaps_df=converge_df,
                         loop_its=loop_its,
                         stratify=stratify,
                         converge_shaps_df=converge_shaps_df,
                         shaps_df=converge_shaps_df,
-                        **kwargs
+                        **kwargs,
                     )
 
-                    significant_cols = np.append(significant_cols,converge_df[converge_df.p_value < self.power_alpha].index.values)
+                    significant_cols = np.append(
+                        significant_cols,
+                        converge_df[
+                            converge_df.p_value < self.power_alpha
+                        ].index.values,
+                    )
 
-                    processed_shaps_df.loc[converge_df[converge_df.p_value < self.power_alpha].index.values]=converge_df[converge_df.p_value < self.power_alpha]
+                    processed_shaps_df.loc[
+                        converge_df[converge_df.p_value < self.power_alpha].index.values
+                    ] = converge_df[converge_df.p_value < self.power_alpha]
 
-                processed_shaps_df.loc[converge_df.index.values]=converge_df
+                processed_shaps_df.loc[converge_df.index.values] = converge_df
 
         self._print("Done!")
 
-        self._processed_shaps_df = processed_shaps_df.copy()
-        if self._input_names is not None:
-            self._processed_shaps_df.index = [
-                self._input_names[i] if isinstance(i, int) else i
-                for i in processed_shaps_df.index.values
-            ]
-
+        ## Set the p-values property (used in the transform function)
         # Remove the random feature (legit features have int index)
         sub_df = processed_shaps_df[
             processed_shaps_df.index.map(lambda x: isinstance(x, int))
@@ -338,6 +344,14 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         # Sort to have original order again
         sub_df = sub_df.sort_index()
         self._p_values = sub_df.p_value.values
+
+        ## Store the processed_shaps_df in the object
+        self._processed_shaps_df = processed_shaps_df
+        if self.feature_names_in_ is not None:
+            self._processed_shaps_df.index = [
+                self.feature_names_in_[i] if isinstance(i, int) else i
+                for i in processed_shaps_df.index.values
+            ]
 
         # It is convention to return self
         return self
@@ -350,10 +364,10 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
     def transform(self, X):
         check_is_fitted(self, ["_processed_shaps_df", "_p_values"])
-        if self._input_names is not None and isinstance(X, pd.DataFrame):
-            assert np.all(X.columns.values == self._input_names)
+        if self.feature_names_in_ is not None and isinstance(X, pd.DataFrame):
+            assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
                 super().transform(X),
-                columns=self._input_names[self._get_support_mask()],
+                columns=self.feature_names_in_[self._get_support_mask()],
             )
         return super().transform(X)
