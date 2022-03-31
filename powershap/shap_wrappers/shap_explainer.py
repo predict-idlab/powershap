@@ -9,7 +9,7 @@ from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from abc import ABC
 
-from typing import Any
+from typing import Any, Callable
 
 
 class ShapExplainer(ABC):
@@ -36,6 +36,9 @@ class ShapExplainer(ABC):
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
     ) -> np.array:
         raise NotImplementedError
+
+    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+        return validate_data(X, y, **kwargs)
 
     # Should be implemented by subclass
     @staticmethod
@@ -140,6 +143,22 @@ class CatboostExplainer(ShapExplainer):
     def supports_model(model) -> bool:
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
+
+    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+        if np.any(pd.isna(X)):
+            from sklearn.impute import SimpleImputer
+
+            # https://github.com/scikit-learn/scikit-learn/issues/16426
+            all_nans = pd.isna(X).all(axis=0)
+            X_ = np.zeros(X.shape)
+            X_[:, ~all_nans] = SimpleImputer().fit_transform(X)
+            if isinstance(X, pd.DataFrame):
+                X_ = pd.DataFrame(X_, columns=X.columns)  # , index=X.index)
+            _, y = validate_data(X_, y, **kwargs)
+            X = np.asarray(X.values if isinstance(X, pd.DataFrame) else X)
+            return X, y
+        # If there are no nans we can perform the default validation
+        return super()._validate_data(validate_data, X, y, **kwargs)
 
     def _fit_get_shap(
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
