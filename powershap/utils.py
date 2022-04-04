@@ -13,7 +13,7 @@ def p_values_arg_coef(coefficients, arg):
 def powerSHAP_statistical_analysis(
     shaps_df: pd.DataFrame,
     power_alpha: float,
-    power_req_iterations: int,
+    power_req_iterations: float,
     include_all: bool,
 ):
     p_values = []
@@ -24,7 +24,8 @@ def powerSHAP_statistical_analysis(
     mean_random_uniform = shaps_df["random_uniform_feature"].mean()
     for i in range(len(shaps_df.columns)):
         p_value = (
-            p_values_arg_coef(np.array(shaps_df.values[:, i]), mean_random_uniform)
+            p_values_arg_coef(
+                np.array(shaps_df.values[:, i]), mean_random_uniform)
             / 100
         )
 
@@ -33,13 +34,13 @@ def powerSHAP_statistical_analysis(
         if include_all or p_value < power_alpha:
             pooled_standard_deviation = np.sqrt(
                 (
-                    (shaps_df.std().values[i] ** 2) 
-                    + (shaps_df["random_uniform_feature"].std() ** 2)
+                    (shaps_df.std()[i] ** 2) 
+                    + (shaps_df["random_uniform_feature"].values.std() ** 2)
                 )
                 / (2)
             )
             effect_size.append(
-                (mean_random_uniform - shaps_df.mean().values[i])
+                (mean_random_uniform - shaps_df.mean()[i])
                 / pooled_standard_deviation
             )
             power_list.append(

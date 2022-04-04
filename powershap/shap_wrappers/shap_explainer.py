@@ -109,10 +109,11 @@ class ShapExplainer(ABC):
                 random_state=i,
                 stratify=stratify,
             )
-            X_train = X.iloc[train_idx]
-            X_val = X.iloc[val_idx]
-            Y_train = y[train_idx]
-            Y_val = y[val_idx]
+
+            X_train = X.iloc[np.sort(train_idx)]
+            X_val = X.iloc[np.sort(val_idx)]
+            Y_train = y[np.sort(train_idx)]
+            Y_val = y[np.sort(val_idx)]
 
             Shap_values = self._fit_get_shap(
                 X_train=X_train.values,
@@ -126,7 +127,7 @@ class ShapExplainer(ABC):
             Shap_values = np.abs(Shap_values)
 
             # TODO: consider to convert to even float16?
-            shaps += [np.mean(Shap_values, axis=0).astype("float32")]
+            shaps += [np.mean(Shap_values, axis=0).astype("float64")]
 
         shaps = np.array(shaps)
 
@@ -225,6 +226,7 @@ class LinearExplainer(ShapExplainer):
         except:
             PowerSHAP_model = clone(self.model)
         PowerSHAP_model.fit(X_train, Y_train)
+
         # Calculate the shap values
         C_explainer = shap.explainers.Linear(PowerSHAP_model, X_train)
         return C_explainer.shap_values(X_val)

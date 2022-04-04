@@ -28,7 +28,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         val_size: float = 0.2,
         power_req_iterations: float = 0.99,
         include_all: bool = False,
-        automatic: bool = False,
+        automatic: bool = True,
         force_convergence: bool = False,
         limit_automatic: int = 10,
         limit_incremental_iterations: int = 10,
@@ -111,11 +111,6 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         self.fit_kwargs = fit_kwargs
 
         self._explainer = ShapExplainerFactory.get_explainer(model=model)
-
-        if automatic:
-            assert (
-                limit_automatic != None
-            ), '"limit_automatic" must be specified when automatic mode is used!'
 
     def _print(self, *values):
         """Helper method for printing if `verbose` is set to True."""
