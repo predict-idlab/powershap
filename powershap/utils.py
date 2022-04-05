@@ -34,13 +34,13 @@ def powerSHAP_statistical_analysis(
         if include_all or p_value < power_alpha:
             pooled_standard_deviation = np.sqrt(
                 (
-                    (shaps_df.std()[i] ** 2) 
+                    (shaps_df.std().values[i] ** 2) 
                     + (shaps_df["random_uniform_feature"].values.std() ** 2)
                 )
                 / (2)
             )
             effect_size.append(
-                (mean_random_uniform - shaps_df.mean()[i])
+                (mean_random_uniform - shaps_df.mean().values[i])
                 / pooled_standard_deviation
             )
             power_list.append(
