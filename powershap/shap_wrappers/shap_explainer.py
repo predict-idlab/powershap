@@ -126,6 +126,9 @@ class ShapExplainer(ABC):
 
             Shap_values = np.abs(Shap_values)
 
+            if len(np.shape(Shap_values))>2:
+                Shap_values = np.max(Shap_values, axis=0)
+
             # TODO: consider to convert to even float16?
             shaps += [np.mean(Shap_values, axis=0).astype("float64")]
 
