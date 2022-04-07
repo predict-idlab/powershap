@@ -22,7 +22,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
     def __init__(
         self,
-        model,
+        model = None,
         power_iterations: int = 10,
         power_alpha: float = 0.01,
         val_size: float = 0.2,
@@ -42,8 +42,11 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
         Parameters
         ----------
-        model
+        model: Any, optional
             The model used for for the powershap calculation.
+            If no model is passed, by default, a catboost model will be used. If the 
+            data type is of type float, a CatBoostRegressor will be selected, for all
+            the other cases a CatBoostClassifier is selected.
         power_iterations: int, optional
             The number of shuffles and iterations of the power feature selection method,
             ignored when using automatic mode. By default 10.
@@ -110,7 +113,45 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         self.verbose = verbose
         self.fit_kwargs = fit_kwargs
 
-        self._explainer = ShapExplainerFactory.get_explainer(model=model)
+        if model is not None:
+            self._explainer = ShapExplainerFactory.get_explainer(model=model)
+
+    @staticmethod
+    def _get_default_model(y: np.ndarray):
+        from catboost import CatBoostClassifier, CatBoostRegressor
+        assert isinstance(y, np.ndarray)
+        dtype = y.dtype
+        if np.issubdtype(dtype, np.number) and not np.issubdtype(dtype, np.integer):
+            return CatBoostRegressor(n_estimators=250, verbose=0)
+        if np.issubdtype(dtype, np.integer) and np.max(np.unique(y)) >= 5:
+            warnings.warn(
+                "Classifying although there are >= 5 integers in the labels.",
+                UserWarning
+            )
+        return CatBoostClassifier(n_estimators=250, verbose=0)
+
+    def _log_feature_names_sklean_v0(self, X):
+        """Log the feature names if we have sklearn 0.x"""
+        assert sklearn.__version__.startswith("0.")
+        feature_names = np.asarray(X.columns) if hasattr(X, "columns") else None
+        if len(feature_names) == 0:
+            feature_names = None
+        else:
+            # Check if all feature names of type string
+            types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
+            if len(types) > 1 or types[0] != "str":
+                feature_names = None
+                warnings.warn(
+                    "Feature names only support names that are all strings.",
+                    UserWarning,
+                )
+
+        if feature_names is not None:        
+            self.feature_names_in_ = feature_names
+        elif hasattr(self, "feature_names_in_"):
+            # Delete the attribute when the estimator is fitted on a new dataset that
+            # has no feature names.
+            delattr(self, "feature_names_in_")
 
     def _print(self, *values):
         """Helper method for printing if `verbose` is set to True."""
@@ -228,22 +269,15 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             stratify = y
         kwargs.update(self.fit_kwargs)  # is inplace operation
 
+        if self.model is None:
+            # If no model is passed to the constructor -> select the default catboost
+            # model
+            self.model = PowerSHAP._get_default_model(y)
+            self._explainer = ShapExplainerFactory.get_explainer(self.model)
+
         if sklearn.__version__.startswith("0."):
             # Log the feature names if we have sklearn 0.x
-            feature_names = np.asarray(X.columns) if hasattr(X, "columns") else None
-            if feature_names is None or len(feature_names) == 0:
-                self.feature_names_in_ = None
-            else:
-                # Check if all feature names of type string
-                types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
-                if len(types) > 1 or types[0] != "str":
-                    self.feature_names_in_ = None
-                    warnings.warn(
-                        "Feature names only support names that are all strings.",
-                        UserWarning,
-                    )
-                else:
-                    self.feature_names_in_ = feature_names
+            self._log_feature_names_sklean_v0(X)
         # Perform the necessary sklearn checks -> X and y are both ndarray
         # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x)
         X, y = self._explainer._validate_data(
@@ -359,7 +393,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
         ## Store the processed_shaps_df in the object
         self._processed_shaps_df = processed_shaps_df
-        if self.feature_names_in_ is not None:
+        if hasattr(self, "feature_names_in_"):
             self._processed_shaps_df.index = [
                 self.feature_names_in_[i] if isinstance(i, int) else i
                 for i in processed_shaps_df.index.values
@@ -376,7 +410,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
     def transform(self, X):
         check_is_fitted(self, ["_processed_shaps_df", "_p_values"])
-        if self.feature_names_in_ is not None and isinstance(X, pd.DataFrame):
+        if hasattr(self, "feature_names_in_") and isinstance(X, pd.DataFrame):
             assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
                 super().transform(X),

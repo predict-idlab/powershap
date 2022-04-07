@@ -16,7 +16,7 @@ def test_catboost_class_powershap(dummy_classification):
 
     selector = PowerSHAP(
         model=CatBoostClassifier(n_estimators=250, verbose=0),
-        power_iterations=15,
+        power_iterations=15, automatic=False,
     )
 
     selector.fit(X, y)
@@ -33,7 +33,7 @@ def test_catboost_regr_powershap(dummy_regression):
 
     selector = PowerSHAP(
         model=CatBoostRegressor(n_estimators=250, verbose=0),
-        power_iterations=15,
+        power_iterations=15, automatic=False,
     )
 
     selector.fit(X, y)
