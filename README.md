@@ -66,7 +66,7 @@ The required number of iterations and the threshold values are hyperparameters o
 If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
 
 ```bibtex
-@software{jeroen_van_der_donckt_2022_6421932,
+@software{jarne_verhaeghe_2022_6421932,
   author       = {Jarne Verhaeghe and 
                   Jeroen Van Der Donckt and
                   Femke Ongenae and
