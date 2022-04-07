@@ -14,7 +14,7 @@ from .shap_wrappers import ShapExplainerFactory
 from .utils import powerSHAP_statistical_analysis
 
 
-class PowerSHAP(SelectorMixin, BaseEstimator):
+class PowerShap(SelectorMixin, BaseEstimator):
     """
     Feature selection based on significance of shap values.
 
@@ -22,7 +22,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
 
     def __init__(
         self,
-        model = None,
+        model=None,
         power_iterations: int = 10,
         power_alpha: float = 0.01,
         val_size: float = 0.2,
@@ -43,10 +43,16 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         Parameters
         ----------
         model: Any, optional
-            The model used for for the powershap calculation.
-            If no model is passed, by default, a catboost model will be used. If the 
+            The model used for for the powershap calculation. The currently supported
+            models are; catboost, sklearn tree-based, sklearn linear, and tensorflow
+            deep learning models.
+            If no model is passed, by default, a catboost model will be used. If the
             data type is of type float, a CatBoostRegressor will be selected, for all
             the other cases a CatBoostClassifier is selected.
+            ..note::
+                The deep learning model should take |features| + 1 as input size.
+                It is thus the user his/her responsibility to account for the added
+                random feature, when using deep learning models.
         power_iterations: int, optional
             The number of shuffles and iterations of the power feature selection method,
             ignored when using automatic mode. By default 10.
@@ -67,10 +73,9 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
             If True, the powershap will first calculate the required iterations by using
             10 iterations and then restart using the required iterations for
             `power_iterations`. By default False.
-            TODO: dit is dan geen harde limiet (zie hieronder?)
         force_convergence: bool, optional
-            Only used for automatic mode. If True, powershap will continue delete 
-            the found relevant features and rerun until no more relevant features are found. 
+            Only used for automatic mode. If True, powershap will continue delete
+            the found relevant features and rerun until no more relevant features are found.
             This is especially useful in high-dimensional datasets
         limit_automatic: int, optional
             The number of maximum allowed iterations when `automatic` is True. By
@@ -119,24 +124,31 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
     @staticmethod
     def _get_default_model(y: np.ndarray):
         from catboost import CatBoostClassifier, CatBoostRegressor
+
         assert isinstance(y, np.ndarray)
         dtype = y.dtype
         if np.issubdtype(dtype, np.number) and not np.issubdtype(dtype, np.integer):
-            return CatBoostRegressor(n_estimators=250, verbose=0)
-        if np.issubdtype(dtype, np.integer) and np.max(np.unique(y)) >= 5:
+            return CatBoostRegressor(
+                n_estimators=250,
+                od_type="Iter",
+                od_wait=25,
+                use_best_model=True,
+                verbose=0,
+            )
+        if np.issubdtype(dtype, np.integer) and len(np.unique(y.ravel())) >= 5:
             warnings.warn(
                 "Classifying although there are >= 5 integers in the labels.",
-                UserWarning
+                UserWarning,
             )
-        return CatBoostClassifier(n_estimators=250, verbose=0)
+        return CatBoostClassifier(
+            n_estimators=250, od_type="Iter", od_wait=25, use_best_model=True, verbose=0
+        )
 
     def _log_feature_names_sklean_v0(self, X):
         """Log the feature names if we have sklearn 0.x"""
         assert sklearn.__version__.startswith("0.")
         feature_names = np.asarray(X.columns) if hasattr(X, "columns") else None
-        if len(feature_names) == 0:
-            feature_names = None
-        else:
+        if feature_names is not None and len(feature_names) > 0:
             # Check if all feature names of type string
             types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
             if len(types) > 1 or types[0] != "str":
@@ -146,7 +158,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
                     UserWarning,
                 )
 
-        if feature_names is not None:        
+        if feature_names is not None and len(feature_names) > 0:
             self.feature_names_in_ = feature_names
         elif hasattr(self, "feature_names_in_"):
             # Delete the attribute when the estimator is fitted on a new dataset that
@@ -272,7 +284,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         if self.model is None:
             # If no model is passed to the constructor -> select the default catboost
             # model
-            self.model = PowerSHAP._get_default_model(y)
+            self.model = PowerShap._get_default_model(y)
             self._explainer = ShapExplainerFactory.get_explainer(self.model)
 
         if sklearn.__version__.startswith("0."):

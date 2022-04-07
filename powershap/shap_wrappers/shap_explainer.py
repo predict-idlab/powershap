@@ -130,7 +130,7 @@ class ShapExplainer(ABC):
                 Shap_values = np.max(Shap_values, axis=0)
 
             # TODO: consider to convert to even float16?
-            shaps += [np.mean(Shap_values, axis=0).astype("float64")]
+            shaps += [np.mean(Shap_values, axis=0).astype("float32")]
 
         shaps = np.array(shaps)
 
@@ -168,10 +168,10 @@ class CatboostExplainer(ShapExplainer):
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
     ) -> np.array:
         # Fit the model
-        PowerSHAP_model = self.model.copy().set_params(random_seed=random_seed)
-        PowerSHAP_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        PowerShap_model = self.model.copy().set_params(random_seed=random_seed)
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
         # Calculate the shap values
-        C_explainer = shap.TreeExplainer(PowerSHAP_model)
+        C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
 
@@ -196,14 +196,11 @@ class EnsembleExplainer(ShapExplainer):
         from sklearn.base import clone
 
         # Fit the model
-        PowerSHAP_model = clone(self.model).set_params(random_state=random_seed)
-        PowerSHAP_model.fit(X_train, Y_train)
+        PowerShap_model = clone(self.model).set_params(random_state=random_seed)
+        PowerShap_model.fit(X_train, Y_train)
         # Calculate the shap values
-        C_explainer = shap.TreeExplainer(PowerSHAP_model)
-        try:
-            return C_explainer.shap_values(X_val)[1]
-        except:
-            return C_explainer.shap_values(X_val)
+        C_explainer = shap.TreeExplainer(PowerShap_model)
+        return C_explainer.shap_values(X_val)
 
 
 ### LINEAR
@@ -225,13 +222,13 @@ class LinearExplainer(ShapExplainer):
 
         # Fit the model
         try:
-            PowerSHAP_model = clone(self.model).set_params(random_state=random_seed)
+            PowerShap_model = clone(self.model).set_params(random_state=random_seed)
         except:
-            PowerSHAP_model = clone(self.model)
-        PowerSHAP_model.fit(X_train, Y_train)
+            PowerShap_model = clone(self.model)
+        PowerShap_model.fit(X_train, Y_train)
 
         # Calculate the shap values
-        C_explainer = shap.explainers.Linear(PowerSHAP_model, X_train)
+        C_explainer = shap.explainers.Linear(PowerShap_model, X_train)
         return C_explainer.shap_values(X_val)
 
 
@@ -239,10 +236,9 @@ class LinearExplainer(ShapExplainer):
 
 
 class DeepLearningExplainer(ShapExplainer):
-    # TODO
     @staticmethod
     def supports_model(model) -> bool:
-        import tensorflow as tf
+        import tensorflow as tf#; import torch
 
         # import torch  ## TODO: do we support pytorch??
 
@@ -252,14 +248,18 @@ class DeepLearningExplainer(ShapExplainer):
     def _fit_get_shap(
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
     ) -> np.array:
+        import tensorflow as tf; 
+        tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
+       
         # Fit the model
-        PowerSHAP_model = self.model
-        PowerSHAP_model.compile(
+        PowerShap_model = tf.keras.models.clone_model(self.model)
+        metrics = kwargs.get("nn_metric")
+        PowerShap_model.compile(
             loss=kwargs["loss"],
             optimizer=kwargs["optimizer"],
-            metrics=[kwargs["nn_metric"]],
+            metrics=metrics if metrics is None else [metrics],
         )
-        _ = PowerSHAP_model.fit(
+        _ = PowerShap_model.fit(
             X_train,
             Y_train,
             batch_size=kwargs["batch_size"],
@@ -268,5 +268,5 @@ class DeepLearningExplainer(ShapExplainer):
             verbose=False,
         )
         # Calculate the shap values
-        C_explainer = shap.DeepExplainer(PowerSHAP_model, X_train)
-        return C_explainer.shap_values(X_val)[0]  # TODO: why [0]?
+        C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
+        return C_explainer.shap_values(X_val)
