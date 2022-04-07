@@ -1,6 +1,6 @@
 __author__ = "Jeroen Van Der Donckt"
 
-from powershap import PowerSHAP
+from powershap import PowerShap
 from .conftest import dummy_classification, dummy_regression
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -11,7 +11,7 @@ def test_ensemble_class_powershap(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=RandomForestClassifier(n_estimators=25),
         power_iterations=15,
         automatic=False,
@@ -32,7 +32,7 @@ def test_ensemble_regr_powershap(dummy_regression):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=RandomForestRegressor(n_estimators=25),
         power_iterations=15,
         automatic=False,

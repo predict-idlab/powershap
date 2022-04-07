@@ -1,6 +1,6 @@
 __author__ = "Jeroen Van Der Donckt"
 
-from powershap import PowerSHAP
+from powershap import PowerShap
 from .conftest import dummy_classification, dummy_regression
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
@@ -11,7 +11,7 @@ def test_logistic_regr_powershap(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=LogisticRegression(),
         power_iterations=15,
         automatic=False,
@@ -32,7 +32,7 @@ def test_linear_regr_powershap(dummy_regression):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=LinearRegression(),
         power_iterations=15,
         automatic=False,

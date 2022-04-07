@@ -14,7 +14,7 @@ from .shap_wrappers import ShapExplainerFactory
 from .utils import powerSHAP_statistical_analysis
 
 
-class PowerSHAP(SelectorMixin, BaseEstimator):
+class PowerShap(SelectorMixin, BaseEstimator):
     """
     Feature selection based on significance of shap values.
 
@@ -284,7 +284,7 @@ class PowerSHAP(SelectorMixin, BaseEstimator):
         if self.model is None:
             # If no model is passed to the constructor -> select the default catboost
             # model
-            self.model = PowerSHAP._get_default_model(y)
+            self.model = PowerShap._get_default_model(y)
             self._explainer = ShapExplainerFactory.get_explainer(self.model)
 
         if sklearn.__version__.startswith("0."):

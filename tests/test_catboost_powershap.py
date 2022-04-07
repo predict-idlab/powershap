@@ -3,7 +3,7 @@ __author__ = "Jeroen Van Der Donckt"
 import numpy as np
 import pandas as pd
 
-from powershap import PowerSHAP
+from powershap import PowerShap
 from .conftest import dummy_classification, dummy_regression
 
 from catboost import CatBoostClassifier, CatBoostRegressor
@@ -14,7 +14,7 @@ def test_catboost_class_powershap(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=CatBoostClassifier(n_estimators=250, verbose=0),
         power_iterations=15,
         automatic=False,
@@ -32,7 +32,7 @@ def test_catboost_regr_powershap(dummy_regression):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=CatBoostRegressor(n_estimators=250, verbose=0),
         power_iterations=15,
         automatic=False,
@@ -52,7 +52,7 @@ def test_catboost_handle_nans(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=CatBoostClassifier(n_estimators=10, verbose=0),
         power_iterations=15,
     )

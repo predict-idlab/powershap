@@ -1,6 +1,6 @@
 __author__ = "Jeroen Van Der Donckt"
 
-from powershap import PowerSHAP
+from powershap import PowerShap
 from .conftest import dummy_classification, dummy_regression
 
 import tensorflow as tf
@@ -17,7 +17,7 @@ def test_deep_learning_class_powershap(dummy_classification):
     )
     model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=model,
         power_iterations=5,
         automatic=False,
@@ -40,7 +40,7 @@ def test_deep_learning_regr_powershap(dummy_regression):
     )
     model.add(tf.keras.layers.Dense(1, activation="linear"))
 
-    selector = PowerSHAP(
+    selector = PowerShap(
         model=model,
         power_iterations=5,
         automatic=False,
