@@ -13,16 +13,16 @@
 <!-- It is also implented as sklearn `Transformer` component, allowing convenient integration in `sklearn` pipelines. -->
 
 ```py
-from powershap import PowerSHAP
+from powershap import PowerShap
 from catboost import CatBoostClassifier
 
 X, y = ...  # your classification dataset
 
-selector = PowerSHAP(
+selector = PowerShap(
     model=CatBoostClassifier(n_estimators=250, verbose=0, use_best_model=True)
 )
 
-selector.fit(X, y)  # Fit the PowerSHAP feature selector
+selector.fit(X, y)  # Fit the PowerShap feature selector
 selector.transform(X)  # Reduce the dataset to the selected features
 
 ```
