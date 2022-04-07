@@ -1,13 +1,13 @@
-# PowerSHAP
+# PowerShap 🏋️
 
 > *powershap* is a **feature selection method** that uses statistical hypothesis testing and power calculations on **Shapley values**, enabling fast and intuitive wrapper-based feature selection.  
 
-## Installation
+## Installation ⚙️
 
 | [**pip**](https://pypi.org/project/powershap/) | `pip install powershap` | 
 | ---| ----|
 
-## Usage
+## Usage 🛠
 
 *powershap* is built to be intuitive, it supports various models including linear, tree-based, and even deep learning models.  
 <!-- It is also implented as sklearn `Transformer` component, allowing convenient integration in `sklearn` pipelines. -->
@@ -27,7 +27,7 @@ selector.transform(X)  # Reduce the dataset to the selected features
 
 ```
 
-## Features
+## Features ✨
 
 * default automatic mode
 * `scikit-learn` compatible
@@ -35,11 +35,11 @@ selector.transform(X)  # Reduce the dataset to the selected features
 * insights into the feature selection method: call the `._processed_shaps_df` on a fitted `PowerSHAP` feature selector.
 * tested code!
 
-## Benchmarks
+## Benchmarks ⏱
 
 Check out our benchmark results [here](examples/results/).  
 
-## How it works
+## How it works ⁉️
 
 Powershap is built on the core assumption that *an informative feature will have a larger impact on the prediction compared to a known random feature.*
 
@@ -49,7 +49,7 @@ Powershap is built on the core assumption that *an informative feature will have
 * Powershap then outputs all features with a p-value below the provided threshold. The threshold is by default 0.01.
 
 
-### Automatic mode
+### Automatic mode 🤖
 
 The required number of iterations and the threshold values are hyperparameters of powershap. However, to *avoid manually optimizing the hyperparameters* powershap by default uses an automatic mode that automatically determines these hyperparameters. 
 
