@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/470633431.svg)](https://zenodo.org/badge/latestdoi/470633431)
+
 # PowerShap 🏋️
 
 > *powershap* is a **feature selection method** that uses statistical hypothesis testing and power calculations on **Shapley values**, enabling fast and intuitive wrapper-based feature selection.  
@@ -58,6 +60,28 @@ The required number of iterations and the threshold values are hyperparameters o
 * Using the calculated effect size, powershap then calculates the required iterations to achieve a predefined power requirement. By default this is 0.99, which represents a false positive probability of 0.01.
 * If the required iterations are larger than the already performed iterations, powershap then further executes for the extra required iterations. 
 * Afterward, powershap re-calculates the required iterations and it keeps re-executing until the required iterations are met.
+
+## Referencing our package
+
+If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
+
+```bibtex
+@software{jeroen_van_der_donckt_2022_6421932,
+  author       = {Jarne Verhaeghe and 
+                  Jeroen Van Der Donckt and
+                  Gilles Vandewiele and
+                  Vic Degraeve},
+  title        = {predict-idlab/powershap: powershap v0.0.2},
+  month        = apr,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {Release},
+  doi          = {10.5281/zenodo.6421932},
+  url          = {https://doi.org/10.5281/zenodo.6421932}
+}
+```
+
+Paper is pending.
 
 ---
 
