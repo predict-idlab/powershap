@@ -61,7 +61,7 @@ The required number of iterations and the threshold values are hyperparameters o
 * If the required iterations are larger than the already performed iterations, powershap then further executes for the extra required iterations. 
 * Afterward, powershap re-calculates the required iterations and it keeps re-executing until the required iterations are met.
 
-## Referencing our package
+## Referencing our package :memo:
 
 If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
 
