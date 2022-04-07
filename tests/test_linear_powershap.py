@@ -17,7 +17,7 @@ def test_logistic_regr_powershap(dummy_classification):
 
     selector = PowerSHAP(
         model=LogisticRegression(),
-        power_iterations=15,
+        power_iterations=15, automatic=False,
     )
 
     selector.fit(X, y)
@@ -37,7 +37,7 @@ def test_linear_regr_powershap(dummy_regression):
 
     selector = PowerSHAP(
         model=LinearRegression(),
-        power_iterations=15,
+        power_iterations=15, automatic=False,
     )
 
     selector.fit(X, y)
