@@ -69,8 +69,8 @@ If you use *powershap* in a scientific publication, we would highly appreciate c
 @software{jeroen_van_der_donckt_2022_6421932,
   author       = {Jarne Verhaeghe and 
                   Jeroen Van Der Donckt and
-                  Gilles Vandewiele and
-                  Vic Degraeve},
+                  Femke Ongenae and
+                  Sofie Van Hoecke},
   title        = {predict-idlab/powershap: powershap v0.0.2},
   month        = apr,
   year         = 2022,
