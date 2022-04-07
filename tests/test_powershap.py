@@ -26,8 +26,11 @@ def test_default_class_powershap(dummy_classification):
     assert isinstance(selector.model, CatBoostClassifier)
     selected_feats = selector.transform(X)
 
-    assert len(selected_feats.columns) == n_informative
-    assert all([c.startswith("informative") for c in selected_feats.columns])
+    assert len(selected_feats.columns) >= n_informative
+    assert (
+        sum([c.startswith("informative") for c in selected_feats.columns])
+        == n_informative
+    )
 
 
 def test_default_regr_powershap(dummy_regression):
@@ -45,8 +48,11 @@ def test_default_regr_powershap(dummy_regression):
     assert isinstance(selector.model, CatBoostRegressor)
     selected_feats = selector.transform(X)
 
-    assert len(selected_feats.columns) == n_informative
-    assert all([c.startswith("informative") for c in selected_feats.columns])
+    assert len(selected_feats.columns) >= n_informative
+    assert (
+        sum([c.startswith("informative") for c in selected_feats.columns])
+        == n_informative
+    )
 
 
 def test_default_class_automatic_powershap(dummy_classification):
@@ -61,8 +67,11 @@ def test_default_class_automatic_powershap(dummy_classification):
     assert isinstance(selector.model, CatBoostClassifier)
     selected_feats = selector.transform(X)
 
-    assert len(selected_feats.columns) == n_informative
-    assert all([c.startswith("informative") for c in selected_feats.columns])
+    assert len(selected_feats.columns) >= n_informative
+    assert (
+        sum([c.startswith("informative") for c in selected_feats.columns])
+        == n_informative
+    )
 
 
 def test_default_regr_automatic_powershap(dummy_regression):
@@ -77,8 +86,11 @@ def test_default_regr_automatic_powershap(dummy_regression):
     assert isinstance(selector.model, CatBoostRegressor)
     selected_feats = selector.transform(X)
 
-    assert len(selected_feats.columns) == n_informative
-    assert all([c.startswith("informative") for c in selected_feats.columns])
+    assert len(selected_feats.columns) >= n_informative
+    assert (
+        sum([c.startswith("informative") for c in selected_feats.columns])
+        == n_informative
+    )
 
 
 ### INPUT FEATURE NAMES
