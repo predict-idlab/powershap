@@ -21,6 +21,7 @@ tensorflow = "^2.8.0"
 pyparsing = "2.4.7"
 Werkzeug = "2.0.3"
 llvmlite = "0.32.1"
+numba = "0.49.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
