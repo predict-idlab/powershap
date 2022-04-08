@@ -1,6 +1,14 @@
-[![DOI](https://zenodo.org/badge/470633431.svg)](https://zenodo.org/badge/latestdoi/470633431)
-
 # PowerShap 🏋️
+
+
+[![PyPI Latest Release](https://img.shields.io/pypi/v/powershap.svg)](https://pypi.org/project/powershap/)
+[![support-version](https://img.shields.io/pypi/pyversions/powershap)](https://img.shields.io/pypi/pyversions/powershap)
+[![codecov](https://img.shields.io/codecov/c/github/predict-idlab/powershap?logo=codecov)](https://codecov.io/gh/predict-idlab/powershap)
+[![Code quality](https://img.shields.io/lgtm/grade/python/github/predict-idlab/powershap?label=code%20quality&logo=lgtm)](https://lgtm.com/projects/g/predict-idlab/powershap/context:python)
+[![Downloads](https://pepy.tech/badge/powershap)](https://pepy.tech/project/powershap)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?)](http://makeapullrequest.com)
+<!-- [![Testing](https://github.com/predict-idlab/powershap/actions/workflows/test.yml/badge.svg)](https://github.com/predict-idlab/powershap/actions/workflows/test.yml) -->
+[![DOI](https://zenodo.org/badge/470633431.svg)](https://zenodo.org/badge/latestdoi/470633431)
 
 > *powershap* is a **feature selection method** that uses statistical hypothesis testing and power calculations on **Shapley values**, enabling fast and intuitive wrapper-based feature selection.  
 
@@ -85,3 +93,6 @@ Paper is pending.
 
 ---
 
+<p align="center">
+👤 <i>Jarne Verhaeghe, Jeroen Van Der Donckt</i>
+</p>
