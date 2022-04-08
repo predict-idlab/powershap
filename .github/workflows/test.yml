@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-latest', 'macOS-latest', 'ubuntu-latest']
+        os: ['ubuntu-latest']
         python-version: [3.8, 3.9]
 
     steps:
@@ -35,6 +35,8 @@ jobs:
         path: ~/.cache/pypoetry/virtualenvs
         key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}-python-${{ matrix.python-version }}
     - run: poetry --version
+
+    - run: sudo apt-get install llvm  # Because https://github.com/slundberg/shap/issues/1854
     - name: Install dependencies
       run: poetry install
       # Do not use caching (anymore)
