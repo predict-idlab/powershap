@@ -1,13 +1,23 @@
-# PowerSHAP
+# PowerShap 🏋️
+
+
+[![PyPI Latest Release](https://img.shields.io/pypi/v/powershap.svg)](https://pypi.org/project/powershap/)
+[![support-version](https://img.shields.io/pypi/pyversions/powershap)](https://img.shields.io/pypi/pyversions/powershap)
+[![codecov](https://img.shields.io/codecov/c/github/predict-idlab/powershap?logo=codecov)](https://codecov.io/gh/predict-idlab/powershap)
+[![Code quality](https://img.shields.io/lgtm/grade/python/github/predict-idlab/powershap?label=code%20quality&logo=lgtm)](https://lgtm.com/projects/g/predict-idlab/powershap/context:python)
+[![Downloads](https://pepy.tech/badge/powershap)](https://pepy.tech/project/powershap)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?)](http://makeapullrequest.com)
+<!-- [![Testing](https://github.com/predict-idlab/powershap/actions/workflows/test.yml/badge.svg)](https://github.com/predict-idlab/powershap/actions/workflows/test.yml) -->
+[![DOI](https://zenodo.org/badge/470633431.svg)](https://zenodo.org/badge/latestdoi/470633431)
 
 > *powershap* is a **feature selection method** that uses statistical hypothesis testing and power calculations on **Shapley values**, enabling fast and intuitive wrapper-based feature selection.  
 
-## Installation
+## Installation ⚙️
 
 | [**pip**](https://pypi.org/project/powershap/) | `pip install powershap` | 
 | ---| ----|
 
-## Usage
+## Usage 🛠
 
 *powershap* is built to be intuitive, it supports various models including linear, tree-based, and even deep learning models.  
 <!-- It is also implented as sklearn `Transformer` component, allowing convenient integration in `sklearn` pipelines. -->
@@ -27,7 +37,7 @@ selector.transform(X)  # Reduce the dataset to the selected features
 
 ```
 
-## Features
+## Features ✨
 
 * default automatic mode
 * `scikit-learn` compatible
@@ -35,11 +45,11 @@ selector.transform(X)  # Reduce the dataset to the selected features
 * insights into the feature selection method: call the `._processed_shaps_df` on a fitted `PowerSHAP` feature selector.
 * tested code!
 
-## Benchmarks
+## Benchmarks ⏱
 
 Check out our benchmark results [here](examples/results/).  
 
-## How it works
+## How it works ⁉️
 
 Powershap is built on the core assumption that *an informative feature will have a larger impact on the prediction compared to a known random feature.*
 
@@ -49,7 +59,7 @@ Powershap is built on the core assumption that *an informative feature will have
 * Powershap then outputs all features with a p-value below the provided threshold. The threshold is by default 0.01.
 
 
-### Automatic mode
+### Automatic mode 🤖
 
 The required number of iterations and the threshold values are hyperparameters of powershap. However, to *avoid manually optimizing the hyperparameters* powershap by default uses an automatic mode that automatically determines these hyperparameters. 
 
@@ -59,5 +69,30 @@ The required number of iterations and the threshold values are hyperparameters o
 * If the required iterations are larger than the already performed iterations, powershap then further executes for the extra required iterations. 
 * Afterward, powershap re-calculates the required iterations and it keeps re-executing until the required iterations are met.
 
+## Referencing our package :memo:
+
+If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
+
+```bibtex
+@software{jarne_verhaeghe_2022_6421932,
+  author       = {Jarne Verhaeghe and 
+                  Jeroen Van Der Donckt and
+                  Femke Ongenae and
+                  Sofie Van Hoecke},
+  title        = {predict-idlab/powershap: powershap v0.0.2},
+  month        = apr,
+  year         = 2022,
+  publisher    = {Zenodo},
+  version      = {Release},
+  doi          = {10.5281/zenodo.6421932},
+  url          = {https://doi.org/10.5281/zenodo.6421932}
+}
+```
+
+Paper is pending.
+
 ---
 
+<p align="center">
+👤 <i>Jarne Verhaeghe, Jeroen Van Der Donckt</i>
+</p>
