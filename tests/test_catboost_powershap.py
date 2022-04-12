@@ -47,6 +47,7 @@ def test_catboost_regr_powershap(dummy_regression):
 
 def test_catboost_handle_nans(dummy_classification):
     X, y = dummy_classification
+    X.iloc[:5] = None
     X["nan_col"] = None
     assert np.any(pd.isna(X))
     n_informative = sum([c.startswith("informative") for c in X.columns])
