@@ -421,7 +421,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         return self._p_values < self.power_alpha
 
     def transform(self, X):
-        check_is_fitted(self, ["_processed_shaps_df", "_p_values"])
+        check_is_fitted(self, ["_processed_shaps_df", "_p_values", "_explainer"])
         if hasattr(self, "feature_names_in_") and isinstance(X, pd.DataFrame):
             assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
@@ -429,3 +429,6 @@ class PowerShap(SelectorMixin, BaseEstimator):
                 columns=self.feature_names_in_[self._get_support_mask()],
             )
         return super().transform(X)
+
+    def _more_tags(self):
+        return self._explainer._get_more_tags()

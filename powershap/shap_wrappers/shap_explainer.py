@@ -136,6 +136,8 @@ class ShapExplainer(ABC):
 
         return pd.DataFrame(data=shaps, columns=X_train.columns.values)
 
+    def _get_more_tags(self):
+        return {}
 
 ### CATBOOST
 
@@ -149,19 +151,7 @@ class CatboostExplainer(ShapExplainer):
         return isinstance(model, tuple(supported_models))
 
     def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        if np.any(pd.isna(X)):
-            from sklearn.impute import SimpleImputer
-
-            # https://github.com/scikit-learn/scikit-learn/issues/16426
-            all_nans = pd.isna(X).all(axis=0)
-            X_ = np.zeros(X.shape)
-            X_[:, ~all_nans] = SimpleImputer().fit_transform(X)
-            if isinstance(X, pd.DataFrame):
-                X_ = pd.DataFrame(X_, columns=X.columns)  # , index=X.index)
-            _, y = validate_data(X_, y, **kwargs)
-            X = np.asarray(X.values if isinstance(X, pd.DataFrame) else X)
-            return X, y
-        # If there are no nans we can perform the default validation
+        kwargs["force_all_finite"] = "allow-nan"  # catboost allows NaNs in X
         return super()._validate_data(validate_data, X, y, **kwargs)
 
     def _fit_get_shap(
@@ -173,6 +163,9 @@ class CatboostExplainer(ShapExplainer):
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
+
+    def _get_more_tags(self):
+        return {"allow_nan": True}
 
 
 ### RANDOMFOREST
