@@ -284,7 +284,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if self.model is None:
             # If no model is passed to the constructor -> select the default catboost
             # model
-            self.model = PowerShap._get_default_model(y)
+            self.model = PowerShap._get_default_model(np.asarray(y))
             self._explainer = ShapExplainerFactory.get_explainer(self.model)
 
         if sklearn.__version__.startswith("0."):
