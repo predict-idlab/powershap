@@ -86,7 +86,7 @@ def test_catboost_handle_infs(dummy_classification):
 def test_catboost_handle_infs_nans(dummy_classification):
     X, y = dummy_classification
     X.iloc[:5] = np.Inf
-    X.iloc[:10] = None
+    X.iloc[5:10] = None
     X["inf_col"] = np.Inf
     X["nan_col"] = None
     assert np.any(pd.isinf(X))
