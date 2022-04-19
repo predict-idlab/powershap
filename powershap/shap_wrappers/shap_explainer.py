@@ -151,7 +151,7 @@ class CatboostExplainer(ShapExplainer):
         return isinstance(model, tuple(supported_models))
 
     def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        kwargs["force_all_finite"] = True  # catboost allows NaNs and infs in X
+        kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
         return super()._validate_data(validate_data, X, y, **kwargs)
 
     def _fit_get_shap(
