@@ -171,7 +171,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             print(*values)
 
     def _automatic_fit(
-        self, X, y, processed_shaps_df, loop_its, stratify, shaps_df, **kwargs
+        self, X, y, processed_shaps_df, loop_its, stratify, groups, shaps_df, **kwargs
     ):
         if not any(processed_shaps_df.p_value < self.power_alpha):
             # There is no feature found yet...
@@ -220,6 +220,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     loop_its=self.limit_incremental_iterations,
                     val_size=self.val_size,
                     stratify=stratify,
+                    groups=groups,
                     random_seed_start=max_iterations_old,
                     **kwargs,
                 )
@@ -241,6 +242,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     loop_its=max_iterations - max_iterations_old,
                     val_size=self.val_size,
                     stratify=stratify,
+                    groups=groups,
                     random_seed_start=max_iterations_old,
                     **kwargs,
                 )
@@ -275,7 +277,26 @@ class PowerShap(SelectorMixin, BaseEstimator):
 
         return processed_shaps_df
 
-    def fit(self, X, y, stratify=None, cv=None, **kwargs):
+    def fit(self, X, y, stratify=None, groups=None, **kwargs):
+        """Fit the powershap feature selector.
+
+        Parameters
+        ----------
+        X: array-like of shape (n_samples, n_features)
+            Training data, where ``n_samples`` is the number of samples and 
+            ``n_features`` is the number of features.
+        y: array-like of shape (n_samples,)
+            The target variable for supervised learning problems.
+        stratify: array-like of shape (n_samples,), optional
+            Array that will be used to perform stratified train-test splits. By default
+            None.
+            Note: if None, than `y` will be used as `stratify` if the stratify flag of 
+            the object is True.
+        groups: array-like of shape (n_samples,), optional
+            Group labels for the samples used while splitting the dataset into 
+            train/test set. By default None.
+        
+        """
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
             stratify = y
@@ -314,6 +335,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             loop_its=loop_its,
             val_size=self.val_size,
             stratify=stratify,
+            groups=groups,
             **kwargs,
         )
 
@@ -332,6 +354,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                 processed_shaps_df=processed_shaps_df,
                 loop_its=loop_its,
                 stratify=stratify,
+                groups=groups,
                 shaps_df=shaps_df,
                 **kwargs,
             )
@@ -356,6 +379,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         loop_its=loop_its,
                         val_size=self.val_size,
                         stratify=stratify,
+                        groups=groups,
                         **kwargs,
                     )
 
@@ -374,6 +398,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         processed_shaps_df=converge_df,
                         loop_its=loop_its,
                         stratify=stratify,
+                        groups=groups,
                         converge_shaps_df=converge_shaps_df,
                         shaps_df=converge_shaps_df,
                         **kwargs,
