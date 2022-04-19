@@ -128,3 +128,59 @@ def test_powershap_array(dummy_classification):
     assert not hasattr(selector, "feature_names_in_")
     selected_feats = selector.transform(X)
     assert isinstance(selected_feats, np.ndarray)
+
+
+
+### STRATIFY & GROUPS
+
+
+def test_powershap_stratify_constructor(dummy_classification):
+    X, y = dummy_classification
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,
+        automatic=False,
+        stratify=True,
+    )
+
+    assert selector.stratify == True
+
+    selector.fit(X, y)
+
+
+def test_powershap_stratify_fit(dummy_classification):
+    X, y = dummy_classification
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,
+        automatic=False,
+    )
+
+    selector.fit(X, y, stratify=y)
+
+
+def test_powershap_groups_fit(dummy_classification):
+    X, y = dummy_classification
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,
+        automatic=False,
+    )
+
+    selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))
+
+
+def test_powershap_stratify_constructor_groups_fit(dummy_classification):
+    X, y = dummy_classification
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,
+        automatic=False,
+        stratify=True,
+    )
+
+    selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))

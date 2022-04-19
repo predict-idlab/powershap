@@ -1,5 +1,6 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
+import warnings
 import shap
 import pandas as pd
 import numpy as np
@@ -65,6 +66,7 @@ class ShapExplainer(ABC):
         loop_its: int,
         val_size: float,
         stratify: np.array = None,
+        groups: np.array = None,
         random_seed_start: int = 0,
         **kwargs,
     ) -> pd.DataFrame:
@@ -83,6 +85,9 @@ class ShapExplainer(ABC):
             The fractional size of the validation set. Should be a float between ]0,1[.
         stratify: np.array, optional
             The array used to create a stratified train_test_split. By default None.
+        groups: np.array, optional
+            The group labels for the samples used while splitting the dataset into
+            train/test set. By default None.
         random_seed_start: int, optional
             The random seed to start the iterations with. By default 0.
         **kwargs: dict
@@ -103,12 +108,49 @@ class ShapExplainer(ABC):
             X["random_uniform_feature"] = random_uniform_feature
 
             # Perform train-test split
-            train_idx, val_idx = train_test_split(
-                np.arange(len(X)),
-                test_size=val_size,
-                random_state=i,
-                stratify=stratify,
-            )
+            if groups is None:
+                # stratify may be None or not None
+                train_idx, val_idx = train_test_split(
+                    np.arange(len(X)),
+                    test_size=val_size,
+                    random_state=i,
+                    stratify=stratify,
+                )
+            elif stratify is None:
+                # groups may be None or not None
+                from sklearn.model_selection import GroupShuffleSplit
+
+                train_idx, val_idx = next(
+                    GroupShuffleSplit(
+                        random_state=i,
+                        n_splits=1,
+                        test_size=val_size,
+                    ).split(X, y, groups=groups)
+                )
+            else:
+                # stratify and groups are both not Noe
+                try:
+                    from sklearn.model_selection import StratifiedGroupKFold
+
+                    train_idx, val_idx = next(
+                        StratifiedGroupKFold(
+                            shuffle=True,
+                            random_state=i,
+                            n_splits=int(1 / val_size),
+                        ).split(X, y, groups=groups)
+                    )
+                except:
+                    warnings.warn(
+                        "Did not find StratifiedGroupKFold in sklearn install, "
+                        + "this is only supported in sklearn 1.x.",
+                        UserWarning,
+                    )
+                    train_idx, val_idx = train_test_split(
+                        np.arange(len(X)),
+                        test_size=val_size,
+                        random_state=i,
+                        stratify=stratify,
+                    )
 
             X_train = X.iloc[np.sort(train_idx)]
             X_val = X.iloc[np.sort(val_idx)]
@@ -126,7 +168,7 @@ class ShapExplainer(ABC):
 
             Shap_values = np.abs(Shap_values)
 
-            if len(np.shape(Shap_values))>2:
+            if len(np.shape(Shap_values)) > 2:
                 Shap_values = np.max(Shap_values, axis=0)
 
             # TODO: consider to convert to even float16?
@@ -138,6 +180,7 @@ class ShapExplainer(ABC):
 
     def _get_more_tags(self):
         return {}
+
 
 ### CATBOOST
 
@@ -231,7 +274,7 @@ class LinearExplainer(ShapExplainer):
 class DeepLearningExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
-        import tensorflow as tf#; import torch
+        import tensorflow as tf  # ; import torch
 
         # import torch  ## TODO: do we support pytorch??
 
@@ -241,9 +284,10 @@ class DeepLearningExplainer(ShapExplainer):
     def _fit_get_shap(
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
     ) -> np.array:
-        import tensorflow as tf; 
+        import tensorflow as tf
+
         tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
-       
+
         # Fit the model
         PowerShap_model = tf.keras.models.clone_model(self.model)
         metrics = kwargs.get("nn_metric")
