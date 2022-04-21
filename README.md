@@ -49,7 +49,7 @@ selector.transform(X)  # Reduce the dataset to the selected features
 
 Check out our benchmark results [here](examples/results/).  
 
-## How it works ⁉️
+## How does it work ⁉️
 
 Powershap is built on the core assumption that *an informative feature will have a larger impact on the prediction compared to a known random feature.*
 
