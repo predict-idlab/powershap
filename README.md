@@ -1,5 +1,9 @@
-# PowerShap 🏋️
-
+	
+<p align="center">
+    <a href="#readme">
+        <img alt="PowerShap logo" src="https://raw.githubusercontent.com/predict-idlab/powershap/main/powershap_full_scaled.png" width=70%>
+    </a>
+</p>
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/powershap.svg)](https://pypi.org/project/powershap/)
 [![support-version](https://img.shields.io/pypi/pyversions/powershap)](https://img.shields.io/pypi/pyversions/powershap)
