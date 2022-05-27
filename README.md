@@ -1,5 +1,9 @@
-# PowerShap 🏋️
-
+	
+<p align="center">
+    <a href="#readme">
+        <img alt="PowerShap logo" src="https://raw.githubusercontent.com/predict-idlab/powershap/main/powershap_full_scaled.png" width=70%>
+    </a>
+</p>
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/powershap.svg)](https://pypi.org/project/powershap/)
 [![support-version](https://img.shields.io/pypi/pyversions/powershap)](https://img.shields.io/pypi/pyversions/powershap)
@@ -49,7 +53,7 @@ selector.transform(X)  # Reduce the dataset to the selected features
 
 Check out our benchmark results [here](examples/results/).  
 
-## How it works ⁉️
+## How does it work ⁉️
 
 Powershap is built on the core assumption that *an informative feature will have a larger impact on the prediction compared to a known random feature.*
 
@@ -74,18 +78,18 @@ The required number of iterations and the threshold values are hyperparameters o
 If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
 
 ```bibtex
-@software{jarne_verhaeghe_2022_6421932,
-  author       = {Jarne Verhaeghe and 
+@software{jarne_verhaeghe_2022_6490197,
+  author       = {Jarne Verhaeghe and
                   Jeroen Van Der Donckt and
                   Femke Ongenae and
                   Sofie Van Hoecke},
-  title        = {predict-idlab/powershap: powershap v0.0.2},
+  title        = {predict-idlab/powershap: powershap v0.0.5.1},
   month        = apr,
   year         = 2022,
   publisher    = {Zenodo},
-  version      = {Release},
-  doi          = {10.5281/zenodo.6421932},
-  url          = {https://doi.org/10.5281/zenodo.6421932}
+  version      = {powershap-v0.0.5.1},
+  doi          = {10.5281/zenodo.6490197},
+  url          = {https://doi.org/10.5281/zenodo.6490197}
 }
 ```
 

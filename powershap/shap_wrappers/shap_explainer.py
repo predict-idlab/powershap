@@ -222,9 +222,10 @@ class EnsembleExplainer(ShapExplainer):
         # from sklearn.ensemble._bagging import BaseBagging
         from sklearn.ensemble._forest import ForestRegressor, ForestClassifier
         from sklearn.ensemble._gb import BaseGradientBoosting
+        # from sklearn.ensemble._hist_gradient_boosting import BaseHistGradientBoosting
 
         supported_models = [ForestRegressor, ForestClassifier, BaseGradientBoosting]
-        return isinstance(model, tuple(supported_models))
+        return issubclass(type(model), tuple(supported_models))
 
     def _fit_get_shap(
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
@@ -249,7 +250,7 @@ class LinearExplainer(ShapExplainer):
         from sklearn.linear_model._stochastic_gradient import BaseSGD
 
         supported_models = [LinearClassifierMixin, LinearModel, BaseSGD]
-        return isinstance(model, tuple(supported_models))
+        return issubclass(type(model), tuple(supported_models))
 
     def _fit_get_shap(
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs

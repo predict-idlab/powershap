@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "powershap"
-version = "0.0.5"
+version = "0.0.5.1"
 description = "Feature selection using statistical significance of shap values"
 authors = ["Jarne Verhaeghe, Jeroen Van Der Donckt"]
 readme = "README.md"
@@ -9,8 +9,8 @@ repository = "https://github.com/predict-idlab/powershap"
 keywords = ["feature selection", "shap", "data-science", "machine learning"]
 
 [tool.poetry.dependencies]
-python = ">=3.7.1,<3.11"
-numpy = "~1.21"  # To allow python 3.7.x
+python = ">=3.7.1,<3.10"
+numpy = "~1.20"  # To allow python 3.7.x
 pandas = "~1.3"  # To allow python 3.7.x
 sklearn = "^0.0"
 catboost = "^1.0.5"
@@ -24,6 +24,7 @@ tensorflow = "^2.8.0"
 pyparsing = "2.4.7"
 Werkzeug = "2.0.3"
 scipy = "~1.7"  # To allow python 3.7.x
+numba = "0.54.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
