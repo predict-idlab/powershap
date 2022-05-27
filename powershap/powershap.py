@@ -30,6 +30,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         include_all: bool = False,
         automatic: bool = True,
         force_convergence: bool = False,
+        limit_convergence_its: int = 0,
         limit_automatic: int = 10,
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
@@ -77,6 +78,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
             Only used for automatic mode. If True, powershap will continue delete
             the found relevant features and rerun until no more relevant features are found.
             This is especially useful in high-dimensional datasets
+        limit_convergence_its: int, optional
+            The number of maximum allowed recursions when `force_convergence` is True. By
+            default 0, meaning that no limit is applied. A limit_convergence_its of 1 suggests 
+            only executing one convergence recursion 
+            after a single full automatic PowerShap execution. 
         limit_automatic: int, optional
             The number of maximum allowed iterations when `automatic` is True. By
             default None, meaning that no limit is applied.
@@ -111,6 +117,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         self.include_all = include_all
         self.automatic = automatic
         self.force_convergence = force_convergence
+        self.limit_convergence_its = limit_convergence_its
         self.limit_automatic = limit_automatic
         self.limit_incremental_iterations = limit_incremental_iterations
         self.limit_recursive_automatic = limit_recursive_automatic
@@ -369,7 +376,15 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     converge_df[converge_df.p_value < self.power_alpha].index.values
                 )
 
-                while len(converge_df[converge_df.p_value < self.power_alpha]) > 0:
+                # If limit_convergence_its is zero, the convergence mode does not have a limit. If not, the 
+                # While loop condition is recalculated every while loop iteration.
+                if self.limit_convergence_its > 0:
+                    current_converge_recursions = 0
+                    while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+                else:
+                    while_convergence_bool = True
+
+                while((len(converge_df[converge_df.p_value < self.power_alpha]) > 0) & (while_convergence_bool)):
                     self._print("Rerunning powershap for convergence. ")
                     converge_shaps_df = self._explainer.explain(
                         X=X.drop(
@@ -415,7 +430,20 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         converge_df[converge_df.p_value < self.power_alpha].index.values
                     ] = converge_df[converge_df.p_value < self.power_alpha]
 
+                    
+                    if self.limit_convergence_its > 0:
+                        current_converge_recursions += 1
+                        print(current_converge_recursions)
+                        while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+
+                        if not while_convergence_bool:
+                            self._print("Convergence limit reached: Stopping convergence mode.")
+
+
                 processed_shaps_df.loc[converge_df.index.values] = converge_df
+
+
+
 
         self._print("Done!")
 
