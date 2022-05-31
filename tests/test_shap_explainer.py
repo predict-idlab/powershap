@@ -6,6 +6,7 @@ from powershap.shap_wrappers import ShapExplainerFactory
 from powershap.shap_wrappers.shap_explainer import (
     LinearExplainer,
     CatboostExplainer,
+    LGBMExplainer,
     EnsembleExplainer,
     DeepLearningExplainer,
 )
@@ -55,6 +56,16 @@ def test_get_catboost_explainer():
     for model_class in model_classes:
         explainer = ShapExplainerFactory.get_explainer(model_class())
         assert isinstance(explainer, CatboostExplainer)
+
+
+def test_get_lightgbm_explainer():
+    from lightgbm import LGBMClassifier, LGBMRegressor
+
+    model_classes = [LGBMClassifier, LGBMRegressor]
+
+    for model_class in model_classes:
+        explainer = ShapExplainerFactory.get_explainer(model_class())
+        assert isinstance(explainer, LGBMExplainer)
 
 
 def test_get_ensemble_explainer():

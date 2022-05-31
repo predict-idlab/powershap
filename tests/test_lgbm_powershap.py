@@ -6,17 +6,17 @@ import pandas as pd
 from powershap import PowerShap
 from .conftest import dummy_classification, dummy_regression
 
-from catboost import CatBoostClassifier, CatBoostRegressor
+from lightgbm import LGBMClassifier, LGBMRegressor
 
 
-def test_catboost_class_powershap(dummy_classification):
+def test_lgbm_class_powershap(dummy_classification):
     X, y = dummy_classification
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=250, verbose=0),
-        power_iterations=15,
+        model=LGBMClassifier(n_estimators=250, verbose=0),
+        power_iterations=50,
         automatic=False,
     )
 
@@ -27,13 +27,13 @@ def test_catboost_class_powershap(dummy_classification):
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
 
-def test_catboost_regr_powershap(dummy_regression):
+def test_lgbm_regr_powershap(dummy_regression):
     X, y = dummy_regression
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostRegressor(n_estimators=250, verbose=0),
+        model=LGBMRegressor(n_estimators=250, verbose=0),
         power_iterations=15,
         automatic=False,
     )
@@ -45,7 +45,7 @@ def test_catboost_regr_powershap(dummy_regression):
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
 
-def test_catboost_handle_nans(dummy_classification):
+def test_lgbm_handle_nans(dummy_classification):
     X, y = dummy_classification
     X.iloc[:5] = None
     X["nan_col"] = None
@@ -54,7 +54,7 @@ def test_catboost_handle_nans(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        model=LGBMClassifier(n_estimators=10, verbose=0),
         power_iterations=15,
     )
 
@@ -64,7 +64,7 @@ def test_catboost_handle_nans(dummy_classification):
     assert len(selected_feats.columns) == n_informative
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
-def test_catboost_handle_infs(dummy_classification):
+def test_lgbm_handle_infs(dummy_classification):
     X, y = dummy_classification
     X.iloc[:5] = np.Inf
     X["inf_col"] = np.Inf
@@ -73,7 +73,7 @@ def test_catboost_handle_infs(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        model=LGBMClassifier(n_estimators=10, verbose=0),
         power_iterations=15,
     )
 
@@ -83,7 +83,7 @@ def test_catboost_handle_infs(dummy_classification):
     assert len(selected_feats.columns) == n_informative
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
-def test_catboost_handle_infs_nans(dummy_classification):
+def test_lgbm_handle_infs_nans(dummy_classification):
     X, y = dummy_classification
     X.iloc[:5] = np.Inf
     X.iloc[5:10] = None
@@ -95,7 +95,7 @@ def test_catboost_handle_infs_nans(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        model=LGBMClassifier(n_estimators=10, verbose=0),
         power_iterations=15,
     )
 
@@ -106,15 +106,16 @@ def test_catboost_handle_infs_nans(dummy_classification):
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
 
-def test_catboost_handle_strings(dummy_classification):
+def test_lgbm_handle_cats(dummy_classification):
     X, y = dummy_classification
-    X["cat"] = "miauw"
+    X["cat"] = 0
+    X["cat"] = X["cat"].astype("category")
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=30, verbose=0, cat_features=[X.shape[1] - 1]),
-        power_iterations=15,
+        model=LGBMClassifier(n_estimators=250, verbose=0),
+        power_iterations=50,
     )
 
     selector.fit(X, y)

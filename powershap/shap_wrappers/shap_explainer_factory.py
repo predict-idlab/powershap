@@ -3,6 +3,7 @@ __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 from .shap_explainer import (
     ShapExplainer,
     CatboostExplainer,
+    LGBMExplainer,
     EnsembleExplainer,
     LinearExplainer,
     DeepLearningExplainer,
@@ -16,6 +17,7 @@ class ShapExplainerFactory:
 
     _explainer_models = [
         CatboostExplainer,
+        LGBMExplainer,
         EnsembleExplainer,
         LinearExplainer,
         DeepLearningExplainer,

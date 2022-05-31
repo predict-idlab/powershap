@@ -102,7 +102,7 @@ def test_powershap_dataframe(dummy_classification):
     selector = PowerShap(
         model=CatBoostClassifier(n_estimators=10, verbose=0),
         power_iterations=5,
-        automatic=False,
+        automatic=False, show_progress=False,
     )
 
     assert isinstance(X, pd.DataFrame)

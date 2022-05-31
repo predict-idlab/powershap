@@ -35,6 +35,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
         stratify: bool = False,
+        show_progress: bool = True,
         verbose: bool = False,
         **fit_kwargs,
     ):
@@ -99,6 +100,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
             ..note::
                 If you want to pass a specific array as stratify (that is not `y`), you
                 can pass it as `stratify` argument to the `.fit` method.
+        show_progress: bool, optional
+            Flag indicating whether progress of the powershap iterations should be
+            shown. By default True.
         verbose: bool, optional
             Flag indicating whether verbose console output should be shown. By default
             False.
@@ -122,6 +126,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         self.limit_incremental_iterations = limit_incremental_iterations
         self.limit_recursive_automatic = limit_recursive_automatic
         self.stratify = stratify
+        self.show_progress = show_progress
         self.verbose = verbose
         self.fit_kwargs = fit_kwargs
 
@@ -229,6 +234,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     stratify=stratify,
                     groups=groups,
                     random_seed_start=max_iterations_old,
+                    show_progress=self.show_progress,
                     **kwargs,
                 )
 
@@ -251,6 +257,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     stratify=stratify,
                     groups=groups,
                     random_seed_start=max_iterations_old,
+                    show_progress=self.show_progress,
                     **kwargs,
                 )
 
@@ -290,19 +297,19 @@ class PowerShap(SelectorMixin, BaseEstimator):
         Parameters
         ----------
         X: array-like of shape (n_samples, n_features)
-            Training data, where ``n_samples`` is the number of samples and 
+            Training data, where ``n_samples`` is the number of samples and
             ``n_features`` is the number of features.
         y: array-like of shape (n_samples,)
             The target variable for supervised learning problems.
         stratify: array-like of shape (n_samples,), optional
             Array that will be used to perform stratified train-test splits. By default
             None.
-            Note: if None, than `y` will be used as `stratify` if the stratify flag of 
+            Note: if None, than `y` will be used as `stratify` if the stratify flag of
             the object is True.
         groups: array-like of shape (n_samples,), optional
-            Group labels for the samples used while splitting the dataset into 
+            Group labels for the samples used while splitting the dataset into
             train/test set. By default None.
-        
+
         """
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
@@ -343,6 +350,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             val_size=self.val_size,
             stratify=stratify,
             groups=groups,
+            show_progress=self.show_progress,
             **kwargs,
         )
 
@@ -395,6 +403,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         val_size=self.val_size,
                         stratify=stratify,
                         groups=groups,
+                        show_progress=self.show_progress,
                         **kwargs,
                     )
 
@@ -441,8 +450,6 @@ class PowerShap(SelectorMixin, BaseEstimator):
 
 
                 processed_shaps_df.loc[converge_df.index.values] = converge_df
-
-
 
 
         self._print("Done!")

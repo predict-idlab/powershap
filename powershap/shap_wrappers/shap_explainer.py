@@ -68,6 +68,7 @@ class ShapExplainer(ABC):
         stratify: np.array = None,
         groups: np.array = None,
         random_seed_start: int = 0,
+        show_progress: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
         """Get the shap values,
@@ -100,7 +101,8 @@ class ShapExplainer(ABC):
 
         shaps = []  # TODO: pre-allocate for efficiency
 
-        for i in tqdm(range(loop_its)):
+        iterations = tqdm(range(loop_its)) if show_progress else range(loop_its)
+        for i in iterations:
             npRandomState = RandomState(i + random_seed_start)
 
             # Add uniform random feature to X
@@ -195,6 +197,7 @@ class CatboostExplainer(ShapExplainer):
 
     def _validate_data(self, validate_data: Callable, X, y, **kwargs):
         kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
+        kwargs["dtype"] = None  # allow non-numeric data
         return super()._validate_data(validate_data, X, y, **kwargs)
 
     def _fit_get_shap(
@@ -209,6 +212,37 @@ class CatboostExplainer(ShapExplainer):
 
     def _get_more_tags(self):
         return {"allow_nan": True}
+
+
+class LGBMExplainer(ShapExplainer):
+    @staticmethod
+    def supports_model(model) -> bool:
+        from lightgbm import LGBMClassifier, LGBMRegressor
+        supported_models = [LGBMClassifier, LGBMRegressor]
+        return isinstance(model, tuple(supported_models))
+
+    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+        kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
+        return super()._validate_data(validate_data, X, y, **kwargs)
+
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
+        # Fit the model
+
+        # Why we need to use deepcopy and delete LGBM __deepcopy__
+        # https://github.com/microsoft/LightGBM/issues/4085
+        from copy import copy
+
+        PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        # Calculate the shap values
+        C_explainer = shap.TreeExplainer(PowerShap_model)
+        return C_explainer.shap_values(X_val)
+
+    def _get_more_tags(self):
+        return {"allow_nan": True}
+
 
 
 ### RANDOMFOREST
