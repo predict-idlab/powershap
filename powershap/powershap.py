@@ -291,7 +291,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
 
         return processed_shaps_df
 
-    def fit(self, X, y, stratify=None, groups=None, **kwargs):
+    def fit(self, X, y, stratify=None, shuffle=True, groups=None, **kwargs):
         """Fit the powershap feature selector.
 
         Parameters
@@ -306,6 +306,8 @@ class PowerShap(SelectorMixin, BaseEstimator):
             None.
             Note: if None, than `y` will be used as `stratify` if the stratify flag of
             the object is True.
+        shuffle: bool, default=True
+            Whether or not to shuffle the data before splitting
         groups: array-like of shape (n_samples,), optional
             Group labels for the samples used while splitting the dataset into
             train/test set. By default None.
@@ -349,6 +351,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             loop_its=loop_its,
             val_size=self.val_size,
             stratify=stratify,
+            shuffle=shuffle,
             groups=groups,
             show_progress=self.show_progress,
             **kwargs,

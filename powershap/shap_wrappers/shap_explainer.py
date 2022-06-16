@@ -66,6 +66,7 @@ class ShapExplainer(ABC):
         loop_its: int,
         val_size: float,
         stratify: np.array = None,
+        shuffle: bool = False,
         groups: np.array = None,
         random_seed_start: int = 0,
         show_progress: bool = False,
@@ -111,13 +112,21 @@ class ShapExplainer(ABC):
 
             # Perform train-test split
             if groups is None:
-                # stratify may be None or not None
-                train_idx, val_idx = train_test_split(
-                    np.arange(len(X)),
-                    test_size=val_size,
-                    random_state=i,
-                    stratify=stratify,
-                )
+                if stratify is None and not shuffle:
+                    train_idx, val_idx = train_test_split(
+                        np.arange(len(X)),
+                        test_size=val_size,
+                        random_state=i,
+                        shuffle=shuffle,
+                    )
+                else:
+                    # stratify may be None or not None
+                    train_idx, val_idx = train_test_split(
+                        np.arange(len(X)),
+                        test_size=val_size,
+                        random_state=i,
+                        stratify=stratify,
+                    )
             elif stratify is None:
                 # groups may be None or not None
                 from sklearn.model_selection import GroupShuffleSplit
