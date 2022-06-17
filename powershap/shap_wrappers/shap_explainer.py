@@ -68,6 +68,7 @@ class ShapExplainer(ABC):
         stratify: np.array = None,
         shuffle: bool = False,
         groups: np.array = None,
+        train_test_indices: np.array = None,
         random_seed_start: int = 0,
         show_progress: bool = False,
         **kwargs,
@@ -90,6 +91,8 @@ class ShapExplainer(ABC):
         groups: np.array, optional
             The group labels for the samples used while splitting the dataset into
             train/test set. By default None.
+        train_test_indices: np.array, optional, default=None
+            Train test indices as list of tuples
         random_seed_start: int, optional
             The random seed to start the iterations with. By default 0.
         **kwargs: dict
@@ -110,8 +113,12 @@ class ShapExplainer(ABC):
             random_uniform_feature = npRandomState.uniform(-1, 1, len(X))
             X["random_uniform_feature"] = random_uniform_feature
 
+            # Custom train test indices
+            if train_test_indices is not None:
+                train_idx, val_idx = train_test_indices[i]
+
             # Perform train-test split
-            if groups is None:
+            elif groups is None:
                 if stratify is None and not shuffle:
                     train_idx, val_idx = train_test_split(
                         np.arange(len(X)),

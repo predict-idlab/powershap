@@ -291,7 +291,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
 
         return processed_shaps_df
 
-    def fit(self, X, y, stratify=None, shuffle=True, groups=None, **kwargs):
+    def fit(self, X, y, stratify=None, shuffle=True, groups=None, cv=None, **kwargs):
         """Fit the powershap feature selector.
 
         Parameters
@@ -311,7 +311,8 @@ class PowerShap(SelectorMixin, BaseEstimator):
         groups: array-like of shape (n_samples,), optional
             Group labels for the samples used while splitting the dataset into
             train/test set. By default None.
-
+        cv: cross-validation generator or iterable, default=None
+            An iterable yielding (train, test) splits as arrays of indices
         """
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
@@ -345,6 +346,13 @@ class PowerShap(SelectorMixin, BaseEstimator):
                 f"iterations for significance of {self.power_alpha}.",
             )
 
+        # Generate Train Test Indices from CV iterator as list of tuples
+        train_test_indices = []
+        for train, test in cv.split(np.arange(len(X))):
+            train_test_indices.append((train, test))
+        if len(train_test_indices) != loop_its:
+            raise ValueError(f"CV iterator number of splits {len(train_test_indices)} must match loop_its {loop_its}")
+
         shaps_df = self._explainer.explain(
             X=X,
             y=y,
@@ -353,6 +361,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             stratify=stratify,
             shuffle=shuffle,
             groups=groups,
+            train_test_indices=train_test_indices,
             show_progress=self.show_progress,
             **kwargs,
         )
