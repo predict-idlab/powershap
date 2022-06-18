@@ -262,6 +262,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     val_size=self.val_size,
                     stratify=stratify,
                     groups=groups,
+                    cv_split=self.cv,  # pass the wrapped cv split function
                     random_seed_start=max_iterations_old,
                     show_progress=self.show_progress,
                     **kwargs,
@@ -285,6 +286,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     val_size=self.val_size,
                     stratify=stratify,
                     groups=groups,
+                    cv_split=self.cv,  # pass the wrapped cv split function
                     random_seed_start=max_iterations_old,
                     show_progress=self.show_progress,
                     **kwargs,
@@ -433,6 +435,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         val_size=self.val_size,
                         stratify=stratify,
                         groups=groups,
+                        cv_split=self.cv,  # pass the wrapped cv split function
                         show_progress=self.show_progress,
                         **kwargs,
                     )
