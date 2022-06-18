@@ -67,6 +67,7 @@ class ShapExplainer(ABC):
         val_size: float,
         stratify: np.array = None,
         groups: np.array = None,
+        cv_split: Callable = None,
         random_seed_start: int = 0,
         show_progress: bool = False,
         **kwargs,
@@ -89,6 +90,10 @@ class ShapExplainer(ABC):
         groups: np.array, optional
             The group labels for the samples used while splitting the dataset into
             train/test set. By default None.
+        cv_split: Callable, optional
+            The function used to create a cross-validation split. By default None.
+            This function is a wrapper of the BaseCrossValidator that will yield
+            infinite amount of splits. The arguments of this function are X, y, groups.
         random_seed_start: int, optional
             The random seed to start the iterations with. By default 0.
         **kwargs: dict
@@ -101,6 +106,12 @@ class ShapExplainer(ABC):
 
         shaps = []  # TODO: pre-allocate for efficiency
 
+        cv_splitter = None
+        if cv_split is not None:
+            # Pas the stratify array as y if stratify is not None
+            y_ = stratify if stratify is not None else y
+            cv_splitter = cv_split(X, y=y_, groups=groups)
+
         iterations = tqdm(range(loop_its)) if show_progress else range(loop_its)
         for i in iterations:
             npRandomState = RandomState(i + random_seed_start)
@@ -109,8 +120,11 @@ class ShapExplainer(ABC):
             random_uniform_feature = npRandomState.uniform(-1, 1, len(X))
             X["random_uniform_feature"] = random_uniform_feature
 
-            # Perform train-test split
-            if groups is None:
+            ### A) Split using the wrapped cross-validation splitter
+            if cv_splitter is not None:
+                train_idx, val_idx = next(cv_splitter)
+            ### B) Perform train-test split when no cross-validation splitter is passed
+            elif groups is None:
                 # stratify may be None or not None
                 train_idx, val_idx = train_test_split(
                     np.arange(len(X)),
@@ -130,7 +144,7 @@ class ShapExplainer(ABC):
                     ).split(X, y, groups=groups)
                 )
             else:
-                # stratify and groups are both not Noe
+                # stratify and groups are both not None
                 try:
                     from sklearn.model_selection import StratifiedGroupKFold
 

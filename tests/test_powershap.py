@@ -145,6 +145,7 @@ def test_powershap_stratify_constructor(dummy_classification):
     )
 
     assert selector.stratify == True
+    assert selector.cv is None
 
     selector.fit(X, y)
 
@@ -158,6 +159,8 @@ def test_powershap_stratify_fit(dummy_classification):
         automatic=False,
     )
 
+    assert selector.cv is None
+
     selector.fit(X, y, stratify=y)
 
 
@@ -169,6 +172,8 @@ def test_powershap_groups_fit(dummy_classification):
         power_iterations=5,
         automatic=False,
     )
+
+    assert selector.cv is None
 
     selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))
 
@@ -182,5 +187,63 @@ def test_powershap_stratify_constructor_groups_fit(dummy_classification):
         automatic=False,
         stratify=True,
     )
+
+    assert selector.cv is None
+
+    selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))
+
+
+### CROSS-VALIDATION
+
+def test_powershap_cv_kfold(dummy_classification):
+    from sklearn.model_selection import KFold
+    X, y = dummy_classification
+
+    cv = KFold(3)
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,  # more than cv
+        automatic=False,
+        cv=cv,
+    )
+
+    assert selector.cv is not None
+
+    selector.fit(X, y)
+
+
+def test_powershap_cv_groupkfold(dummy_classification):
+    from sklearn.model_selection import GroupKFold
+    X, y = dummy_classification
+
+    cv = GroupKFold(3)
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,  # more than cv
+        automatic=False,
+        cv=cv,
+    )
+
+    assert selector.cv is not None
+
+    selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))
+
+
+def test_powershap_cv_stratifiedgroupkfold(dummy_classification):
+    from sklearn.model_selection import StratifiedGroupKFold
+    X, y = dummy_classification
+
+    cv = StratifiedGroupKFold(3)
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,  # more than cv
+        automatic=False,
+        cv=cv,
+    )
+
+    assert selector.cv is not None
 
     selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))

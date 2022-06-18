@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
+from sklearn.model_selection import BaseCrossValidator
 
 from .shap_wrappers import ShapExplainerFactory
 
@@ -35,6 +36,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         limit_incremental_iterations: int = 10,
         limit_recursive_automatic: int = 3,
         stratify: bool = False,
+        cv: BaseCrossValidator = None,
         show_progress: bool = True,
         verbose: bool = False,
         **fit_kwargs,
@@ -100,6 +102,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
             ..note::
                 If you want to pass a specific array as stratify (that is not `y`), you
                 can pass it as `stratify` argument to the `.fit` method.
+        cv: BaseCrossValidator, optional
+            The cross-validator to use. By default None.
+            This cross-validator should have a `.split` method which yields
+            (train_idx, test_idx) tuples. The arguments of the `.split` method should be
+            X, y, groups. This splitter will be wrapped to yield infinite splits.
         show_progress: bool, optional
             Flag indicating whether progress of the powershap iterations should be
             shown. By default True.
@@ -129,6 +136,28 @@ class PowerShap(SelectorMixin, BaseEstimator):
         self.show_progress = show_progress
         self.verbose = verbose
         self.fit_kwargs = fit_kwargs
+
+        def _infinite_splitter(cv):
+            """Infinite yields for the given splitter.
+            If the splitter is exhausted, it will be reset and restarted.
+            """
+            splitter = None 
+            def split(X, y=None, groups=None):
+                nonlocal splitter
+                if splitter is None:
+                    splitter = cv.split(X, y=y, groups=groups)
+                while True:
+                    try:
+                        yield next(splitter)
+                    except StopIteration:
+                        splitter = cv.split(X, y=y, groups=groups)
+                        yield next(splitter)
+            return split
+     
+        if cv is not None:
+            self.cv = _infinite_splitter(cv)
+        else:
+            self.cv = None
 
         if model is not None:
             self._explainer = ShapExplainerFactory.get_explainer(model=model)
@@ -350,6 +379,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             val_size=self.val_size,
             stratify=stratify,
             groups=groups,
+            cv_split=self.cv,  # pass the wrapped cv split function
             show_progress=self.show_progress,
             **kwargs,
         )
