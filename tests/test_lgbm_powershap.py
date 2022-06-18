@@ -64,6 +64,7 @@ def test_lgbm_handle_nans(dummy_classification):
     assert len(selected_feats.columns) == n_informative
     assert all([c.startswith("informative") for c in selected_feats.columns])
 
+
 def test_lgbm_handle_infs(dummy_classification):
     X, y = dummy_classification
     X.iloc[:5] = np.Inf
@@ -82,6 +83,7 @@ def test_lgbm_handle_infs(dummy_classification):
 
     assert len(selected_feats.columns) == n_informative
     assert all([c.startswith("informative") for c in selected_feats.columns])
+
 
 def test_lgbm_handle_infs_nans(dummy_classification):
     X, y = dummy_classification
@@ -114,7 +116,7 @@ def test_lgbm_handle_cats(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=250, verbose=0),
+        model=LGBMClassifier(n_estimators=10, verbose=0),
         power_iterations=50,
     )
 
