@@ -247,3 +247,21 @@ def test_powershap_cv_stratifiedgroupkfold(dummy_classification):
     assert selector.cv is not None
 
     selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))
+
+
+def test_powershap_cv_groupshufflesplit(dummy_classification):
+    from sklearn.model_selection import GroupShuffleSplit
+    X, y = dummy_classification
+
+    cv = GroupShuffleSplit(3)
+
+    selector = PowerShap(
+        model=CatBoostClassifier(n_estimators=10, verbose=0),
+        power_iterations=5,  # more than cv
+        automatic=False,
+        cv=cv,
+    )
+
+    assert selector.cv is not None
+
+    selector.fit(X, y, groups=np.random.randint(0, 3, size=len(X)))

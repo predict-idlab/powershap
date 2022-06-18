@@ -107,6 +107,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
             This cross-validator should have a `.split` method which yields
             (train_idx, test_idx) tuples. The arguments of the `.split` method should be
             X, y, groups. This splitter will be wrapped to yield infinite splits.
+            ..note::
+                If the given coss validator has no `random_state` argument, the same
+                splits will be used multiple times in the powershap iterations. This
+                may lead to overfitting on the cross-validation splits (and thus
+                selection of non-informative variables).
         show_progress: bool, optional
             Flag indicating whether progress of the powershap iterations should be
             shown. By default True.
@@ -141,15 +146,24 @@ class PowerShap(SelectorMixin, BaseEstimator):
             """Infinite yields for the given splitter.
             If the splitter is exhausted, it will be reset and restarted.
             """
+            from copy import deepcopy
+            cv = deepcopy(cv)
             splitter = None 
+            random_state = 0
             def split(X, y=None, groups=None):
-                nonlocal splitter
+                nonlocal splitter, random_state
                 if splitter is None:
+                    if hasattr(cv, "random_state"):  # Update random state
+                        cv.__setattr__("random_state", random_state)
+                        random_state += 1
                     splitter = cv.split(X, y=y, groups=groups)
                 while True:
                     try:
                         yield next(splitter)
                     except StopIteration:
+                        if hasattr(cv, "random_state"):  # Update random state
+                            cv.__setattr__("random_state", random_state)
+                            random_state += 1
                         splitter = cv.split(X, y=y, groups=groups)
                         yield next(splitter)
             return split
