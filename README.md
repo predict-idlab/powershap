@@ -91,7 +91,7 @@ If you use *powershap* in a scientific publication, we would highly appreciate c
 
 ```
 
-Paper is accepted at ECML PKDD 2022 and will be presented there. The preprint can be found in on arXiv and on the github.
+Paper is accepted at ECML PKDD 2022 and will be presented there. The preprint can be found in on arXiv ([link](https://arxiv.org/abs/2206.08394)) and on the github.
 
 ---
 
