@@ -359,7 +359,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
             stratify = y
-        kwargs.update(self.fit_kwargs)  # is inplace operation
+        
+        # kwargs take precedence over fit_kwargs
+        kwargs = {**self.fit_kwargs, **kwargs}
 
         if self.model is None:
             # If no model is passed to the constructor -> select the default catboost
