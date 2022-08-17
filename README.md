@@ -23,7 +23,7 @@
 
 ## Usage 🛠
 
-*powershap* is built to be intuitive, it supports various models including linear, tree-based, and even deep learning models.  
+*powershap* is built to be intuitive, it supports various models including linear, tree-based, and even deep learning models for classification and regression tasks.  
 <!-- It is also implented as sklearn `Transformer` component, allowing convenient integration in `sklearn` pipelines. -->
 
 ```py
