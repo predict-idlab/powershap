@@ -1,15 +1,16 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
-from .shap_explainer import (
-    ShapExplainer,
-    CatboostExplainer,
-    LGBMExplainer,
-    EnsembleExplainer,
-    LinearExplainer,
-    DeepLearningExplainer,
-)
-
 from typing import Any
+
+from .shap_explainer import (
+    CatboostExplainer,
+    DeepLearningExplainer,
+    EnsembleExplainer,
+    LGBMExplainer,
+    LinearExplainer,
+    ShapExplainer,
+    XGBoostExplainer,
+)
 
 
 class ShapExplainerFactory:
@@ -18,6 +19,7 @@ class ShapExplainerFactory:
     _explainer_models = [
         CatboostExplainer,
         LGBMExplainer,
+        XGBoostExplainer,
         EnsembleExplainer,
         LinearExplainer,
         DeepLearningExplainer,
@@ -42,8 +44,6 @@ class ShapExplainerFactory:
             try:  # To avoid errors when the library is not installed
                 if explainer_class.supports_model(model):
                     return explainer_class(model)
-            except:
+            except Exception:
                 pass
-        raise ValueError(
-            f"Given model ({model}) is not yet supported by our explainer models"
-        )
+        raise ValueError(f"Given model ({model}) is not yet supported by our explainer models")

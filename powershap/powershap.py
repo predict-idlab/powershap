@@ -1,17 +1,16 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
 import warnings
-import sklearn
+
 import numpy as np
 import pandas as pd
-
+import sklearn
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
-from sklearn.utils.validation import check_is_fitted
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils.validation import check_is_fitted
 
 from .shap_wrappers import ShapExplainerFactory
-
 from .utils import powerSHAP_statistical_analysis
 
 
@@ -83,9 +82,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
             This is especially useful in high-dimensional datasets
         limit_convergence_its: int, optional
             The number of maximum allowed recursions when `force_convergence` is True. By
-            default 0, meaning that no limit is applied. A limit_convergence_its of 1 suggests 
-            only executing one convergence recursion 
-            after a single full automatic PowerShap execution. 
+            default 0, meaning that no limit is applied. A limit_convergence_its of 1 suggests
+            only executing one convergence recursion
+            after a single full automatic PowerShap execution.
         limit_automatic: int, optional
             The number of maximum allowed iterations when `automatic` is True. By
             default None, meaning that no limit is applied.
@@ -147,9 +146,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
             If the splitter is exhausted, it will be reset and restarted.
             """
             from copy import deepcopy
+
             cv = deepcopy(cv)
-            splitter = None 
+            splitter = None
             random_state = 0
+
             def split(X, y=None, groups=None):
                 nonlocal splitter, random_state
                 if splitter is None:
@@ -166,8 +167,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
                             random_state += 1
                         splitter = cv.split(X, y=y, groups=groups)
                         yield next(splitter)
+
             return split
-     
+
         if cv is not None:
             self.cv = _infinite_splitter(cv)
         else:
@@ -184,16 +186,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
         dtype = y.dtype
         if np.issubdtype(dtype, np.number) and not np.issubdtype(dtype, np.integer):
             return CatBoostRegressor(
-                n_estimators=250,
-                od_type="Iter",
-                od_wait=25,
-                use_best_model=True,
-                verbose=0,
+                n_estimators=250, od_type="Iter", od_wait=25, use_best_model=True, verbose=0
             )
         if np.issubdtype(dtype, np.integer) and len(np.unique(y.ravel())) >= 5:
             warnings.warn(
-                "Classifying although there are >= 5 integers in the labels.",
-                UserWarning,
+                "Classifying although there are >= 5 integers in the labels.", UserWarning
             )
         return CatBoostClassifier(
             n_estimators=250, od_type="Iter", od_wait=25, use_best_model=True, verbose=0
@@ -208,10 +205,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
             if len(types) > 1 or types[0] != "str":
                 feature_names = None
-                warnings.warn(
-                    "Feature names only support names that are all strings.",
-                    UserWarning,
-                )
+                warnings.warn("Feature names only support names that are all strings.", UserWarning)
 
         if feature_names is not None and len(feature_names) > 0:
             self.feature_names_in_ = feature_names
@@ -282,9 +276,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     **kwargs,
                 )
 
-                max_iterations_old = (
-                    max_iterations_old + self.limit_incremental_iterations
-                )
+                max_iterations_old = max_iterations_old + self.limit_incremental_iterations
 
             else:
                 self._print(
@@ -311,10 +303,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             shaps_df = pd.concat([shaps_df, shaps_df_recursive])
 
             processed_shaps_df = powerSHAP_statistical_analysis(
-                shaps_df,
-                self.power_alpha,
-                self.power_req_iterations,
-                include_all=self.include_all,
+                shaps_df, self.power_alpha, self.power_req_iterations, include_all=self.include_all
             )
 
             if not any(processed_shaps_df.p_value < self.power_alpha):
@@ -359,7 +348,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
             stratify = y
-        
+
         # kwargs take precedence over fit_kwargs
         kwargs = {**self.fit_kwargs, **kwargs}
 
@@ -374,9 +363,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
             self._log_feature_names_sklean_v0(X)
         # Perform the necessary sklearn checks -> X and y are both ndarray
         # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x)
-        X, y = self._explainer._validate_data(
-            self._validate_data, X, y, multi_output=True
-        )
+        X, y = self._explainer._validate_data(self._validate_data, X, y, multi_output=True)
 
         self._print("Starting powershap")
 
@@ -403,10 +390,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         )
 
         processed_shaps_df = powerSHAP_statistical_analysis(
-            shaps_df,
-            self.power_alpha,
-            self.power_req_iterations,
-            include_all=self.include_all,
+            shaps_df, self.power_alpha, self.power_req_iterations, include_all=self.include_all
         )
 
         if self.automatic:
@@ -432,20 +416,22 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     converge_df[converge_df.p_value < self.power_alpha].index.values
                 )
 
-                # If limit_convergence_its is zero, the convergence mode does not have a limit. If not, the 
-                # While loop condition is recalculated every while loop iteration.
+                # If limit_convergence_its is zero, the convergence mode does not have a limit.
+                # If not, the while loop condition is recalculated every while loop iteration.
                 if self.limit_convergence_its > 0:
                     current_converge_recursions = 0
-                    while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+                    while_convergence_bool = (
+                        current_converge_recursions < self.limit_convergence_its
+                    )
                 else:
                     while_convergence_bool = True
 
-                while((len(converge_df[converge_df.p_value < self.power_alpha]) > 0) & (while_convergence_bool)):
+                while (len(converge_df[converge_df.p_value < self.power_alpha]) > 0) & (
+                    while_convergence_bool
+                ):
                     self._print("Rerunning powershap for convergence. ")
                     converge_shaps_df = self._explainer.explain(
-                        X=X.drop(
-                            columns=X.columns.values[significant_cols.astype(np.int32)]
-                        ),
+                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
                         y=y,
                         loop_its=loop_its,
                         val_size=self.val_size,
@@ -464,9 +450,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     )
 
                     converge_df = self._automatic_fit(
-                        X=X.drop(
-                            columns=X.columns.values[significant_cols.astype(np.int32)]
-                        ),
+                        X=X.drop(columns=X.columns.values[significant_cols.astype(np.int32)]),
                         y=y,
                         processed_shaps_df=converge_df,
                         loop_its=loop_its,
@@ -479,35 +463,30 @@ class PowerShap(SelectorMixin, BaseEstimator):
 
                     significant_cols = np.append(
                         significant_cols,
-                        converge_df[
-                            converge_df.p_value < self.power_alpha
-                        ].index.values,
+                        converge_df[converge_df.p_value < self.power_alpha].index.values,
                     )
 
                     processed_shaps_df.loc[
                         converge_df[converge_df.p_value < self.power_alpha].index.values
                     ] = converge_df[converge_df.p_value < self.power_alpha]
 
-                    
                     if self.limit_convergence_its > 0:
                         current_converge_recursions += 1
                         print(current_converge_recursions)
-                        while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+                        while_convergence_bool = (
+                            current_converge_recursions < self.limit_convergence_its
+                        )
 
                         if not while_convergence_bool:
                             self._print("Convergence limit reached: Stopping convergence mode.")
 
-
                 processed_shaps_df.loc[converge_df.index.values] = converge_df
-
 
         self._print("Done!")
 
         ## Set the p-values property (used in the transform function)
         # Remove the random feature (legit features have int index)
-        sub_df = processed_shaps_df[
-            processed_shaps_df.index.map(lambda x: isinstance(x, int))
-        ]
+        sub_df = processed_shaps_df[processed_shaps_df.index.map(lambda x: isinstance(x, int))]
         # Sort to have original order again
         sub_df = sub_df.sort_index()
         self._p_values = sub_df.p_value.values
@@ -534,8 +513,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if hasattr(self, "feature_names_in_") and isinstance(X, pd.DataFrame):
             assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
-                super().transform(X),
-                columns=self.feature_names_in_[self._get_support_mask()],
+                super().transform(X), columns=self.feature_names_in_[self._get_support_mask()]
             )
         return super().transform(X)
 

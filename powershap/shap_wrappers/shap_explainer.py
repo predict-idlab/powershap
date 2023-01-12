@@ -1,25 +1,22 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
 import warnings
-import shap
-import pandas as pd
-import numpy as np
+from abc import ABC
+from copy import copy
+from typing import Any, Callable
 
-from tqdm.auto import tqdm
+import numpy as np
+import pandas as pd
+import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
-from abc import ABC
-
-from typing import Any, Callable
+from tqdm.auto import tqdm
 
 
 class ShapExplainer(ABC):
     """Interface class for a (POWERshap explainer class."""
 
-    def __init__(
-        self,
-        model: Any,
-    ):
+    def __init__(self, model: Any):
         """Create a POWERshap explainer instance.
 
         Parameters
@@ -33,9 +30,7 @@ class ShapExplainer(ABC):
         self.model = model
 
     # Should be implemented by subclass
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         raise NotImplementedError
 
     def _validate_data(self, validate_data: Callable, X, y, **kwargs):
@@ -81,8 +76,7 @@ class ShapExplainer(ABC):
         y: np.array
             The labels.
         loop_its: int
-            The number of iterations to fit the model with random state and random
-            feature.
+            The number of iterations to fit the model with random state and random feature.
         val_size: float
             The fractional size of the validation set. Should be a float between ]0,1[.
         stratify: np.array, optional
@@ -100,7 +94,7 @@ class ShapExplainer(ABC):
             The keyword arguments for the fit method.
         """
         random_col_name = "random_uniform_feature"
-        assert not random_col_name in X.columns
+        assert random_col_name not in X.columns
 
         X = X.copy(deep=True)
 
@@ -127,21 +121,16 @@ class ShapExplainer(ABC):
             elif groups is None:
                 # stratify may be None or not None
                 train_idx, val_idx = train_test_split(
-                    np.arange(len(X)),
-                    test_size=val_size,
-                    random_state=i,
-                    stratify=stratify,
+                    np.arange(len(X)), test_size=val_size, random_state=i, stratify=stratify
                 )
             elif stratify is None:
                 # groups may be None or not None
                 from sklearn.model_selection import GroupShuffleSplit
 
                 train_idx, val_idx = next(
-                    GroupShuffleSplit(
-                        random_state=i,
-                        n_splits=1,
-                        test_size=val_size,
-                    ).split(X, y, groups=groups)
+                    GroupShuffleSplit(random_state=i, n_splits=1, test_size=val_size).split(
+                        X, y, groups=groups
+                    )
                 )
             else:
                 # stratify and groups are both not None
@@ -150,22 +139,17 @@ class ShapExplainer(ABC):
 
                     train_idx, val_idx = next(
                         StratifiedGroupKFold(
-                            shuffle=True,
-                            random_state=i,
-                            n_splits=int(1 / val_size),
+                            shuffle=True, random_state=i, n_splits=int(1 / val_size)
                         ).split(X, y, groups=groups)
                     )
-                except:
+                except Exception:
                     warnings.warn(
                         "Did not find StratifiedGroupKFold in sklearn install, "
                         + "this is only supported in sklearn 1.x.",
                         UserWarning,
                     )
                     train_idx, val_idx = train_test_split(
-                        np.arange(len(X)),
-                        test_size=val_size,
-                        random_state=i,
-                        stratify=stratify,
+                        np.arange(len(X)), test_size=val_size, random_state=i, stratify=stratify
                     )
 
             X_train = X.iloc[np.sort(train_idx)]
@@ -200,7 +184,7 @@ class ShapExplainer(ABC):
 
 ### CATBOOST
 
-from catboost import CatBoostRegressor, CatBoostClassifier
+from catboost import CatBoostClassifier, CatBoostRegressor
 
 
 class CatboostExplainer(ShapExplainer):
@@ -214,9 +198,7 @@ class CatboostExplainer(ShapExplainer):
         kwargs["dtype"] = None  # allow non-numeric data
         return super()._validate_data(validate_data, X, y, **kwargs)
 
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         PowerShap_model = self.model.copy().set_params(random_seed=random_seed)
         PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
@@ -228,10 +210,14 @@ class CatboostExplainer(ShapExplainer):
         return {"allow_nan": True}
 
 
+### LGBM
+
+
 class LGBMExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
         from lightgbm import LGBMClassifier, LGBMRegressor
+
         supported_models = [LGBMClassifier, LGBMRegressor]
         return isinstance(model, tuple(supported_models))
 
@@ -239,15 +225,10 @@ class LGBMExplainer(ShapExplainer):
         kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
         return super()._validate_data(validate_data, X, y, **kwargs)
 
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
-
         # Why we need to use deepcopy and delete LGBM __deepcopy__
         # https://github.com/microsoft/LightGBM/issues/4085
-        from copy import copy
-
         PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
         PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
         # Calculate the shap values
@@ -257,6 +238,33 @@ class LGBMExplainer(ShapExplainer):
     def _get_more_tags(self):
         return {"allow_nan": True}
 
+
+### XGBOOST
+
+
+class XGBoostExplainer(ShapExplainer):
+    @staticmethod
+    def supports_model(model) -> bool:
+        from xgboost import XGBClassifier, XGBRegressor
+
+        supported_models = [XGBClassifier, XGBRegressor]
+        return isinstance(model, tuple(supported_models))
+
+    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+        kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
+        kwargs["dtype"] = None  # allow non-numeric data
+        return super()._validate_data(validate_data, X, y, **kwargs)
+
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
+        # Fit the model
+        PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
+        PowerShap_model.fit(X_train, Y_train)  # , eval_set=(X_val, Y_val))
+        # Calculate the shap values
+        C_explainer = shap.TreeExplainer(PowerShap_model)
+        return C_explainer.shap_values(X_val)
+
+    def _get_more_tags(self):
+        return {"allow_nan": True}
 
 
 ### RANDOMFOREST
@@ -268,16 +276,15 @@ class EnsembleExplainer(ShapExplainer):
         # TODO: these first 2 require extra checks on the base_estimator
         # from sklearn.ensemble._weight_boosting import BaseWeightBoosting
         # from sklearn.ensemble._bagging import BaseBagging
-        from sklearn.ensemble._forest import ForestRegressor, ForestClassifier
+        from sklearn.ensemble._forest import ForestClassifier, ForestRegressor
         from sklearn.ensemble._gb import BaseGradientBoosting
+
         # from sklearn.ensemble._hist_gradient_boosting import BaseHistGradientBoosting
 
         supported_models = [ForestRegressor, ForestClassifier, BaseGradientBoosting]
         return issubclass(type(model), tuple(supported_models))
 
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
 
         # Fit the model
@@ -300,15 +307,13 @@ class LinearExplainer(ShapExplainer):
         supported_models = [LinearClassifierMixin, LinearModel, BaseSGD]
         return issubclass(type(model), tuple(supported_models))
 
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
 
         # Fit the model
         try:
             PowerShap_model = clone(self.model).set_params(random_state=random_seed)
-        except:
+        except Exception:
             PowerShap_model = clone(self.model)
         PowerShap_model.fit(X_train, Y_train)
 
@@ -330,9 +335,7 @@ class DeepLearningExplainer(ShapExplainer):
         supported_models = [tf.keras.Model]  # , torch.nn.Module]
         return isinstance(model, tuple(supported_models))
 
-    def _fit_get_shap(
-        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
-    ) -> np.array:
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         import tensorflow as tf
 
         tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189

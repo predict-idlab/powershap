@@ -1,20 +1,17 @@
 __author__ = "Jarne Verhaeghe"
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from scipy import stats
 from statsmodels.stats.power import TTestPower
+
 
 def p_values_arg_coef(coefficients, arg):
     return stats.percentileofscore(coefficients, arg)
 
 
 def powerSHAP_statistical_analysis(
-    shaps_df: pd.DataFrame,
-    power_alpha: float,
-    power_req_iterations: float,
-    include_all: bool,
+    shaps_df: pd.DataFrame, power_alpha: float, power_req_iterations: float, include_all: bool
 ):
     p_values = []
     effect_size = []
@@ -23,25 +20,20 @@ def powerSHAP_statistical_analysis(
     n_samples = len(shaps_df["random_uniform_feature"].values)
     mean_random_uniform = shaps_df["random_uniform_feature"].mean()
     for i in range(len(shaps_df.columns)):
-        p_value = (
-            p_values_arg_coef(
-                np.array(shaps_df.values[:, i]), mean_random_uniform)
-            / 100
-        )
+        p_value = p_values_arg_coef(np.array(shaps_df.values[:, i]), mean_random_uniform) / 100
 
         p_values.append(p_value)
 
         if include_all or p_value < power_alpha:
             pooled_standard_deviation = np.sqrt(
                 (
-                    (shaps_df.std().values[i] ** 2) 
+                    (shaps_df.std().values[i] ** 2)
                     + (shaps_df["random_uniform_feature"].values.std() ** 2)
                 )
                 / (2)
             )
             effect_size.append(
-                (mean_random_uniform - shaps_df.mean().values[i])
-                / pooled_standard_deviation
+                (mean_random_uniform - shaps_df.mean().values[i]) / pooled_standard_deviation
             )
             power_list.append(
                 TTestPower().power(
@@ -77,9 +69,7 @@ def powerSHAP_statistical_analysis(
                 np.reshape(np.array(p_values), (len(p_values), 1)),
                 np.reshape(np.array(effect_size), (len(effect_size), 1)),
                 np.reshape(np.array(power_list), (len(power_list), 1)),
-                np.reshape(
-                    np.array(required_iterations), (len(required_iterations), 1)
-                ),
+                np.reshape(np.array(required_iterations), (len(required_iterations), 1)),
             ]
         ),
         columns=[
