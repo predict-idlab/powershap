@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from abc import ABC
+from copy import copy
 
 from typing import Any, Callable
 
@@ -228,6 +229,8 @@ class CatboostExplainer(ShapExplainer):
         return {"allow_nan": True}
 
 
+### LGBM
+
 class LGBMExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
@@ -243,11 +246,8 @@ class LGBMExplainer(ShapExplainer):
         self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
     ) -> np.array:
         # Fit the model
-
         # Why we need to use deepcopy and delete LGBM __deepcopy__
         # https://github.com/microsoft/LightGBM/issues/4085
-        from copy import copy
-
         PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
         PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
         # Calculate the shap values
@@ -257,6 +257,33 @@ class LGBMExplainer(ShapExplainer):
     def _get_more_tags(self):
         return {"allow_nan": True}
 
+
+### XGBOOST
+
+class XGBoostExplainer(ShapExplainer):
+    @staticmethod
+    def supports_model(model) -> bool:
+        from xgboost import XGBClassifier, XGBRegressor
+        supported_models = [XGBClassifier, XGBRegressor]
+        return isinstance(model, tuple(supported_models))
+
+    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+        kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
+        kwargs["dtype"] = None  # allow non-numeric data
+        return super()._validate_data(validate_data, X, y, **kwargs)
+
+    def _fit_get_shap(
+        self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs
+    ) -> np.array:
+        # Fit the model
+        PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
+        PowerShap_model.fit(X_train, Y_train)#, eval_set=(X_val, Y_val))
+        # Calculate the shap values
+        C_explainer = shap.TreeExplainer(PowerShap_model)
+        return C_explainer.shap_values(X_val)
+
+    def _get_more_tags(self):
+        return {"allow_nan": True}
 
 
 ### RANDOMFOREST

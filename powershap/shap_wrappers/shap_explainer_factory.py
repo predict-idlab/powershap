@@ -4,6 +4,7 @@ from .shap_explainer import (
     ShapExplainer,
     CatboostExplainer,
     LGBMExplainer,
+    XGBoostExplainer,
     EnsembleExplainer,
     LinearExplainer,
     DeepLearningExplainer,
@@ -18,6 +19,7 @@ class ShapExplainerFactory:
     _explainer_models = [
         CatboostExplainer,
         LGBMExplainer,
+        XGBoostExplainer,
         EnsembleExplainer,
         LinearExplainer,
         DeepLearningExplainer,

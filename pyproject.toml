@@ -22,6 +22,7 @@ pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
 tensorflow = "^2.8.0"
 lightgbm = "^3.3.2"
+xgboost = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
