@@ -24,6 +24,30 @@ tensorflow = "^2.8.0"
 lightgbm = "^3.3.2"
 xgboost = "^1.6.0"
 
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+isort = "^5.11.4"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+## Formatting configuration
+
+# Formatting
+[tool.black]
+color = true
+line-length = 88
+skip-string-normalization = true
+skip-magic-trailing-comma = true
+
+# Sort imports
+[tool.isort]
+line_length = 88
+known_first_party = ["tsdownsample"]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+combine_as_imports = true
+color_output = true
+skip = "tests/toml_test.py"

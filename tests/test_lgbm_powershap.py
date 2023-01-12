@@ -2,11 +2,11 @@ __author__ = "Jeroen Van Der Donckt, Jarne Verhaeghe"
 
 import numpy as np
 import pandas as pd
+from lightgbm import LGBMClassifier, LGBMRegressor
 
 from powershap import PowerShap
-from .conftest import dummy_classification, dummy_regression
 
-from lightgbm import LGBMClassifier, LGBMRegressor
+from .conftest import dummy_classification, dummy_regression
 
 
 def test_lgbm_class_powershap(dummy_classification):
@@ -54,8 +54,7 @@ def test_lgbm_handle_nans(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0),
-        power_iterations=15,
+        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
     )
 
     selector.fit(X, y)
@@ -74,8 +73,7 @@ def test_lgbm_handle_infs(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0),
-        power_iterations=15,
+        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
     )
 
     selector.fit(X, y)
@@ -97,8 +95,7 @@ def test_lgbm_handle_infs_nans(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0),
-        power_iterations=15,
+        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
     )
 
     selector.fit(X, y)
@@ -116,8 +113,7 @@ def test_lgbm_handle_cats(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0),
-        power_iterations=50,
+        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=50
     )
 
     selector.fit(X, y)

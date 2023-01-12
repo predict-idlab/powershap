@@ -1,17 +1,16 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
 import warnings
-import sklearn
+
 import numpy as np
 import pandas as pd
-
+import sklearn
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
-from sklearn.utils.validation import check_is_fitted
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils.validation import check_is_fitted
 
 from .shap_wrappers import ShapExplainerFactory
-
 from .utils import powerSHAP_statistical_analysis
 
 
@@ -83,9 +82,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
             This is especially useful in high-dimensional datasets
         limit_convergence_its: int, optional
             The number of maximum allowed recursions when `force_convergence` is True. By
-            default 0, meaning that no limit is applied. A limit_convergence_its of 1 suggests 
-            only executing one convergence recursion 
-            after a single full automatic PowerShap execution. 
+            default 0, meaning that no limit is applied. A limit_convergence_its of 1 suggests
+            only executing one convergence recursion
+            after a single full automatic PowerShap execution.
         limit_automatic: int, optional
             The number of maximum allowed iterations when `automatic` is True. By
             default None, meaning that no limit is applied.
@@ -147,9 +146,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
             If the splitter is exhausted, it will be reset and restarted.
             """
             from copy import deepcopy
+
             cv = deepcopy(cv)
-            splitter = None 
+            splitter = None
             random_state = 0
+
             def split(X, y=None, groups=None):
                 nonlocal splitter, random_state
                 if splitter is None:
@@ -166,8 +167,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
                             random_state += 1
                         splitter = cv.split(X, y=y, groups=groups)
                         yield next(splitter)
+
             return split
-     
+
         if cv is not None:
             self.cv = _infinite_splitter(cv)
         else:
@@ -359,7 +361,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if stratify is None and self.stratify:
             # Set stratify to y, if no stratify is given and self.stratify is True
             stratify = y
-        
+
         # kwargs take precedence over fit_kwargs
         kwargs = {**self.fit_kwargs, **kwargs}
 
@@ -432,15 +434,19 @@ class PowerShap(SelectorMixin, BaseEstimator):
                     converge_df[converge_df.p_value < self.power_alpha].index.values
                 )
 
-                # If limit_convergence_its is zero, the convergence mode does not have a limit. If not, the 
+                # If limit_convergence_its is zero, the convergence mode does not have a limit. If not, the
                 # While loop condition is recalculated every while loop iteration.
                 if self.limit_convergence_its > 0:
                     current_converge_recursions = 0
-                    while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+                    while_convergence_bool = (
+                        current_converge_recursions < self.limit_convergence_its
+                    )
                 else:
                     while_convergence_bool = True
 
-                while((len(converge_df[converge_df.p_value < self.power_alpha]) > 0) & (while_convergence_bool)):
+                while (len(converge_df[converge_df.p_value < self.power_alpha]) > 0) & (
+                    while_convergence_bool
+                ):
                     self._print("Rerunning powershap for convergence. ")
                     converge_shaps_df = self._explainer.explain(
                         X=X.drop(
@@ -488,18 +494,19 @@ class PowerShap(SelectorMixin, BaseEstimator):
                         converge_df[converge_df.p_value < self.power_alpha].index.values
                     ] = converge_df[converge_df.p_value < self.power_alpha]
 
-                    
                     if self.limit_convergence_its > 0:
                         current_converge_recursions += 1
                         print(current_converge_recursions)
-                        while_convergence_bool = current_converge_recursions < self.limit_convergence_its
+                        while_convergence_bool = (
+                            current_converge_recursions < self.limit_convergence_its
+                        )
 
                         if not while_convergence_bool:
-                            self._print("Convergence limit reached: Stopping convergence mode.")
-
+                            self._print(
+                                "Convergence limit reached: Stopping convergence mode."
+                            )
 
                 processed_shaps_df.loc[converge_df.index.values] = converge_df
-
 
         self._print("Done!")
 

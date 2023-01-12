@@ -2,11 +2,11 @@ __author__ = "Jeroen Van Der Donckt, Jarne Verhaeghe"
 
 import numpy as np
 import pandas as pd
+from xgboost import XGBClassifier, XGBRegressor
 
 from powershap import PowerShap
-from .conftest import dummy_classification, dummy_regression
 
-from xgboost import XGBClassifier, XGBRegressor
+from .conftest import dummy_classification, dummy_regression
 
 
 def test_xgboost_class_powershap(dummy_classification):

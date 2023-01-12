@@ -1,16 +1,16 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
-from .shap_explainer import (
-    ShapExplainer,
-    CatboostExplainer,
-    LGBMExplainer,
-    XGBoostExplainer,
-    EnsembleExplainer,
-    LinearExplainer,
-    DeepLearningExplainer,
-)
-
 from typing import Any
+
+from .shap_explainer import (
+    CatboostExplainer,
+    DeepLearningExplainer,
+    EnsembleExplainer,
+    LGBMExplainer,
+    LinearExplainer,
+    ShapExplainer,
+    XGBoostExplainer,
+)
 
 
 class ShapExplainerFactory:

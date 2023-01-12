@@ -1,8 +1,7 @@
 __author__ = "Jeroen Van Der Donckt"
 
-import pytest
 import pandas as pd
-
+import pytest
 from sklearn.datasets import make_classification, make_regression
 
 
@@ -28,11 +27,7 @@ def dummy_classification() -> pd.DataFrame:
 @pytest.fixture
 def dummy_regression() -> pd.DataFrame:
     X, y = make_regression(
-        n_samples=500,
-        n_features=10,
-        n_informative=2,
-        random_state=42,
-        shuffle=False,
+        n_samples=500, n_features=10, n_informative=2, random_state=42, shuffle=False
     )
     X = pd.DataFrame(
         X,

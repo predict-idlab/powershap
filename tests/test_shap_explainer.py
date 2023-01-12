@@ -4,27 +4,27 @@ from sklearn.linear_model import SGDRegressor
 
 from powershap.shap_wrappers import ShapExplainerFactory
 from powershap.shap_wrappers.shap_explainer import (
-    LinearExplainer,
     CatboostExplainer,
-    LGBMExplainer,
-    XGBoostExplainer,
-    EnsembleExplainer,
     DeepLearningExplainer,
+    EnsembleExplainer,
+    LGBMExplainer,
+    LinearExplainer,
+    XGBoostExplainer,
 )
 
 
 def test_get_linear_explainer():
     from sklearn.linear_model import (
+        LinearRegression,
         LogisticRegression,
         LogisticRegressionCV,
         PassiveAggressiveClassifier,
         Perceptron,
+        Ridge,
         RidgeClassifier,
         RidgeClassifierCV,
-        SGDClassifier,
-        LinearRegression,
-        Ridge,
         RidgeCV,
+        SGDClassifier,
         SGDRegressor,
     )
 
@@ -80,17 +80,15 @@ def test_get_xgboost_explainer():
 
 
 def test_get_ensemble_explainer():
-    from sklearn.ensemble import (
-        RandomForestClassifier,
+    from sklearn.ensemble import (  # HistGradientBoostingClassifier,; HistGradientBoostingRegressor,
         AdaBoostClassifier,
-        GradientBoostingClassifier,
-        ExtraTreesClassifier,
-        # HistGradientBoostingClassifier,
-        RandomForestRegressor,
         AdaBoostRegressor,
-        GradientBoostingRegressor,
+        ExtraTreesClassifier,
         ExtraTreesRegressor,
-        # HistGradientBoostingRegressor,
+        GradientBoostingClassifier,
+        GradientBoostingRegressor,
+        RandomForestClassifier,
+        RandomForestRegressor,
     )
 
     model_classes = [

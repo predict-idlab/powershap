@@ -1,9 +1,10 @@
 __author__ = "Jeroen Van Der Donckt"
 
-from powershap import PowerShap
-from .conftest import dummy_classification, dummy_regression
-
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+from powershap import PowerShap
+
+from .conftest import dummy_classification, dummy_regression
 
 
 def test_ensemble_class_powershap(dummy_classification):
