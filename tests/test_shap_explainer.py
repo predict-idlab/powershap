@@ -80,13 +80,15 @@ def test_get_xgboost_explainer():
 
 
 def test_get_ensemble_explainer():
-    from sklearn.ensemble import (  # HistGradientBoostingClassifier,; HistGradientBoostingRegressor,
+    from sklearn.ensemble import (
         AdaBoostClassifier,
         AdaBoostRegressor,
         ExtraTreesClassifier,
         ExtraTreesRegressor,
         GradientBoostingClassifier,
         GradientBoostingRegressor,
+        HistGradientBoostingClassifier,
+        HistGradientBoostingRegressor,
         RandomForestClassifier,
         RandomForestRegressor,
     )

@@ -15,9 +15,7 @@ def test_lgbm_class_powershap(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMClassifier(n_estimators=250, verbose=0),
-        power_iterations=50,
-        automatic=False,
+        model=LGBMClassifier(n_estimators=250, verbose=0), power_iterations=50, automatic=False
     )
 
     selector.fit(X, y)
@@ -33,9 +31,7 @@ def test_lgbm_regr_powershap(dummy_regression):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=LGBMRegressor(n_estimators=250, verbose=0),
-        power_iterations=15,
-        automatic=False,
+        model=LGBMRegressor(n_estimators=250, verbose=0), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
@@ -53,9 +49,7 @@ def test_lgbm_handle_nans(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -72,9 +66,7 @@ def test_lgbm_handle_infs(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -94,9 +86,7 @@ def test_lgbm_handle_infs_nans(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -112,9 +102,7 @@ def test_lgbm_handle_cats(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=50
-    )
+    selector = PowerShap(model=LGBMClassifier(n_estimators=10, verbose=0), power_iterations=50)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)

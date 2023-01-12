@@ -44,8 +44,6 @@ class ShapExplainerFactory:
             try:  # To avoid errors when the library is not installed
                 if explainer_class.supports_model(model):
                     return explainer_class(model)
-            except:
+            except Exception:
                 pass
-        raise ValueError(
-            f"Given model ({model}) is not yet supported by our explainer models"
-        )
+        raise ValueError(f"Given model ({model}) is not yet supported by our explainer models")

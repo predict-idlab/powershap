@@ -17,9 +17,7 @@ def dummy_classification() -> pd.DataFrame:
         shuffle=False,
     )
     X = pd.DataFrame(
-        X,
-        columns=[f"informative_{i}" for i in range(2)]
-        + [f"random_{i}" for i in range(8)],
+        X, columns=[f"informative_{i}" for i in range(2)] + [f"random_{i}" for i in range(8)]
     )
     return X, y
 
@@ -30,8 +28,6 @@ def dummy_regression() -> pd.DataFrame:
         n_samples=500, n_features=10, n_informative=2, random_state=42, shuffle=False
     )
     X = pd.DataFrame(
-        X,
-        columns=[f"informative_{i}" for i in range(2)]
-        + [f"random_{i}" for i in range(8)],
+        X, columns=[f"informative_{i}" for i in range(2)] + [f"random_{i}" for i in range(8)]
     )
     return X, y

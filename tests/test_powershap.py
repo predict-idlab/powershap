@@ -24,10 +24,7 @@ def test_default_class_powershap(dummy_classification):
     selected_feats = selector.transform(X)
 
     assert len(selected_feats.columns) >= n_informative
-    assert (
-        sum([c.startswith("informative") for c in selected_feats.columns])
-        == n_informative
-    )
+    assert sum([c.startswith("informative") for c in selected_feats.columns]) == n_informative
 
 
 def test_default_regr_powershap(dummy_regression):
@@ -43,10 +40,7 @@ def test_default_regr_powershap(dummy_regression):
     selected_feats = selector.transform(X)
 
     assert len(selected_feats.columns) >= n_informative
-    assert (
-        sum([c.startswith("informative") for c in selected_feats.columns])
-        == n_informative
-    )
+    assert sum([c.startswith("informative") for c in selected_feats.columns]) == n_informative
 
 
 def test_default_class_automatic_powershap(dummy_classification):
@@ -62,10 +56,7 @@ def test_default_class_automatic_powershap(dummy_classification):
     selected_feats = selector.transform(X)
 
     assert len(selected_feats.columns) >= n_informative
-    assert (
-        sum([c.startswith("informative") for c in selected_feats.columns])
-        == n_informative
-    )
+    assert sum([c.startswith("informative") for c in selected_feats.columns]) == n_informative
 
 
 def test_default_regr_automatic_powershap(dummy_regression):
@@ -81,10 +72,7 @@ def test_default_regr_automatic_powershap(dummy_regression):
     selected_feats = selector.transform(X)
 
     assert len(selected_feats.columns) >= n_informative
-    assert (
-        sum([c.startswith("informative") for c in selected_feats.columns])
-        == n_informative
-    )
+    assert sum([c.startswith("informative") for c in selected_feats.columns]) == n_informative
 
 
 ### INPUT FEATURE NAMES
@@ -113,9 +101,7 @@ def test_powershap_array(dummy_classification):
     X = X.values
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
-        power_iterations=5,
-        automatic=False,
+        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=5, automatic=False
     )
 
     assert isinstance(X, np.ndarray)
@@ -138,7 +124,7 @@ def test_powershap_stratify_constructor(dummy_classification):
         stratify=True,
     )
 
-    assert selector.stratify == True
+    assert selector.stratify is True
     assert selector.cv is None
 
     selector.fit(X, y)
@@ -148,9 +134,7 @@ def test_powershap_stratify_fit(dummy_classification):
     X, y = dummy_classification
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
-        power_iterations=5,
-        automatic=False,
+        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=5, automatic=False
     )
 
     assert selector.cv is None
@@ -162,9 +146,7 @@ def test_powershap_groups_fit(dummy_classification):
     X, y = dummy_classification
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0),
-        power_iterations=5,
-        automatic=False,
+        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=5, automatic=False
     )
 
     assert selector.cv is None

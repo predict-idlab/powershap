@@ -13,16 +13,12 @@ def test_deep_learning_class_powershap(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     model = tf.keras.Sequential()
-    model.add(
-        tf.keras.layers.Dense(5, input_shape=(X.shape[1] + 1,), activation="relu")
-    )
+    model.add(tf.keras.layers.Dense(5, input_shape=(X.shape[1] + 1,), activation="relu"))
     model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
     selector = PowerShap(model=model, power_iterations=5, automatic=False)
 
-    selector.fit(
-        X, y, loss="binary_crossentropy", optimizer="adam", batch_size=16, epochs=5
-    )
+    selector.fit(X, y, loss="binary_crossentropy", optimizer="adam", batch_size=16, epochs=5)
     _ = selector.transform(X)
 
 
@@ -32,9 +28,7 @@ def test_deep_learning_regr_powershap(dummy_regression):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     model = tf.keras.Sequential()
-    model.add(
-        tf.keras.layers.Dense(5, input_shape=(X.shape[1] + 1,), activation="linear")
-    )
+    model.add(tf.keras.layers.Dense(5, input_shape=(X.shape[1] + 1,), activation="linear"))
     model.add(tf.keras.layers.Dense(1, activation="linear"))
 
     selector = PowerShap(model=model, power_iterations=5, automatic=False)

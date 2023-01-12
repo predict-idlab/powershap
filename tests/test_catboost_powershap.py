@@ -15,9 +15,7 @@ def test_catboost_class_powershap(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=250, verbose=0),
-        power_iterations=15,
-        automatic=False,
+        model=CatBoostClassifier(n_estimators=250, verbose=0), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
@@ -33,9 +31,7 @@ def test_catboost_regr_powershap(dummy_regression):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostRegressor(n_estimators=250, verbose=0),
-        power_iterations=15,
-        automatic=False,
+        model=CatBoostRegressor(n_estimators=250, verbose=0), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
@@ -53,9 +49,7 @@ def test_catboost_handle_nans(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -72,9 +66,7 @@ def test_catboost_handle_infs(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -94,9 +86,7 @@ def test_catboost_handle_infs_nans(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    selector = PowerShap(
-        model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15
-    )
+    selector = PowerShap(model=CatBoostClassifier(n_estimators=10, verbose=0), power_iterations=15)
 
     selector.fit(X, y)
     selected_feats = selector.transform(X)
@@ -112,9 +102,7 @@ def test_catboost_handle_strings(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=CatBoostClassifier(
-            n_estimators=30, verbose=0, cat_features=[X.shape[1] - 1]
-        ),
+        model=CatBoostClassifier(n_estimators=30, verbose=0, cat_features=[X.shape[1] - 1]),
         power_iterations=15,
     )
 

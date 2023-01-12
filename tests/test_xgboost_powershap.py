@@ -15,9 +15,7 @@ def test_xgboost_class_powershap(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=XGBClassifier(n_estimators=250, verbosity=0),
-        power_iterations=50,
-        automatic=False,
+        model=XGBClassifier(n_estimators=250, verbosity=0), power_iterations=50, automatic=False
     )
 
     selector.fit(X, y)
@@ -33,9 +31,7 @@ def test_xgboost_regr_powershap(dummy_regression):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=XGBRegressor(n_estimators=250, verbosity=0),
-        power_iterations=15,
-        automatic=False,
+        model=XGBRegressor(n_estimators=250, verbosity=0), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
@@ -54,8 +50,7 @@ def test_xgboost_handle_nans(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=XGBClassifier(n_estimators=250, verbosity=0, learning_rate=2),
-        power_iterations=10,
+        model=XGBClassifier(n_estimators=250, verbosity=0, learning_rate=2), power_iterations=10
     )
 
     selector.fit(X, y)

@@ -5,3 +5,9 @@ black = black powershap tests
 format:
 	$(isort)
 	$(black)
+
+.PHONY: lint
+lint:
+	ruff powershap tests
+	$(isort) --check-only --df
+	$(black) --check --diff
