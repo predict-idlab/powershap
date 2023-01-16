@@ -97,3 +97,6 @@ Paper is accepted at ECML PKDD 2022 and will be presented there. The preprint ca
 <p align="center">
 👤 <i>Jarne Verhaeghe, Jeroen Van Der Donckt</i>
 </p>
+
+## License
+This package is available under the MIT license. More information can be found here: https://github.com/predict-idlab/powershap/blob/main/LICENSE
