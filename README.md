@@ -77,20 +77,22 @@ The required number of iterations and the threshold values are hyperparameters o
 If you use *powershap* in a scientific publication, we would highly appreciate citing us as:
 
 ```bibtex
-@misc{https://doi.org/10.48550/arxiv.2206.08394,
-  doi = {10.48550/ARXIV.2206.08394},
-  url = {https://arxiv.org/abs/2206.08394},
-  author = {Verhaeghe, Jarne and Van Der Donckt, Jeroen and Ongenae, Femke and Van Hoecke, Sofie},
-  keywords = {Machine Learning (cs.LG), Machine Learning (stat.ML), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {Powershap: A Power-full Shapley Feature Selection Method},
-  publisher = {arXiv},
-  year = {2022}
-  copyright = {arXiv.org perpetual, non-exclusive license}
+@InProceedings{10.1007/978-3-031-26387-3_5,
+author="Verhaeghe, Jarne
+and Van Der Donckt, Jeroen
+and Ongenae, Femke
+and Van Hoecke, Sofie",
+title="Powershap: A Power-Full Shapley Feature Selection Method",
+booktitle="Machine Learning and Knowledge Discovery in Databases",
+year="2023",
+publisher="Springer International Publishing",
+address="Cham",
+pages="71--87",
+isbn="978-3-031-26387-3"
 }
-
 ```
 
-Paper is accepted at ECML PKDD 2022 and will be presented there. The preprint can be found on arXiv ([link](https://arxiv.org/abs/2206.08394)) and on the github.
+Paper was presented at ECML PKDD 2022. The manuscript can be found [here](https://link.springer.com/chapter/10.1007/978-3-031-26387-3_5) and on the github.
 
 ---
 
