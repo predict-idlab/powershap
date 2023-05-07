@@ -257,7 +257,7 @@ class XGBoostExplainer(ShapExplainer):
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
-        PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
+        PowerShap_model = copy(self.model).set_params(random_state=random_seed)
         PowerShap_model.fit(X_train, Y_train, eval_set=[(X_val, Y_val)])
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
