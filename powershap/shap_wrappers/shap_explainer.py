@@ -181,8 +181,9 @@ class ShapExplainer(ABC):
             shaps += [Shap_values]
 
             # Python's reference-counting garbage collection has a hard time
-            # cleaning up after some of the work above in at least some cases,
-            # so running a manual gc.collect() here helps a great deal.
+            # cleaning up after performing some of the work above. Running a
+            # manual garbage collection here keeps memory usage from increasing
+            # on every iteration.
             gc.collect()
 
 
@@ -199,11 +200,12 @@ class ShapExplainer(ABC):
 
 ### CATBOOST
 
+from catboost import CatBoostClassifier, CatBoostRegressor
+
+
 class CatboostExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
-        from catboost import CatBoostClassifier, CatBoostRegressor
-
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
 
