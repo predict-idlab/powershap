@@ -96,7 +96,6 @@ class ShapExplainer(ABC):
             The keyword arguments for the fit method.
         """
         random_col_name = "random_uniform_feature"
-        assert random_col_name not in X.columns
 
         shaps = []  # TODO: pre-allocate for efficiency
 
@@ -189,10 +188,7 @@ class ShapExplainer(ABC):
 
         shaps = np.array(shaps)
 
-        Xcolumns = X.columns.values
-        X.drop(random_col_name, axis=1, inplace=True)
-
-        return pd.DataFrame(data=shaps, columns=Xcolumns)
+        return pd.DataFrame(data=shaps, columns=X.columns.values)
 
     def _get_more_tags(self):
         return {}
