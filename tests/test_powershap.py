@@ -257,7 +257,7 @@ def test_no_mutate_df(dummy_classification):
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
 
-    assert isinstance(X, pd.core.frame.DataFrame)
+    assert isinstance(X, pd.DataFrame)
 
     hash1 = hashlib.sha1(pd.util.hash_pandas_object(X).values).hexdigest()
 
