@@ -12,6 +12,8 @@ from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from tqdm.auto import tqdm
 
+import gc
+
 
 class ShapExplainer(ABC):
     """Interface class for a (POWERshap explainer class."""
@@ -94,25 +96,22 @@ class ShapExplainer(ABC):
             The keyword arguments for the fit method.
         """
         random_col_name = "random_uniform_feature"
-        assert random_col_name not in X.columns
-
-        X = X.copy(deep=True)
 
         shaps = []  # TODO: pre-allocate for efficiency
 
         cv_splitter = None
         if cv_split is not None:
-            # Pas the stratify array as y if stratify is not None
+            # Pass the stratify array as y if stratify is not None
             y_ = stratify if stratify is not None else y
             cv_splitter = cv_split(X, y=y_, groups=groups)
 
         iterations = tqdm(range(loop_its)) if show_progress else range(loop_its)
         for i in iterations:
-            npRandomState = RandomState(i + random_seed_start)
+            random_seed = i + random_seed_start
+            npRandomState = RandomState(random_seed)
 
-            # Add uniform random feature to X
-            random_uniform_feature = npRandomState.uniform(-1, 1, len(X))
-            X["random_uniform_feature"] = random_uniform_feature
+            # Add uniform random feature to X.
+            X[random_col_name] = npRandomState.uniform(-1, 1, len(X))
 
             ### A) Split using the wrapped cross-validation splitter
             if cv_splitter is not None:
@@ -152,19 +151,23 @@ class ShapExplainer(ABC):
                         np.arange(len(X)), test_size=val_size, random_state=i, stratify=stratify
                     )
 
-            X_train = X.iloc[np.sort(train_idx)]
-            X_val = X.iloc[np.sort(val_idx)]
+            X_train = X.iloc[np.sort(train_idx)].to_numpy()
+            X_val = X.iloc[np.sort(val_idx)].to_numpy()
             Y_train = y[np.sort(train_idx)]
             Y_val = y[np.sort(val_idx)]
 
             Shap_values = self._fit_get_shap(
-                X_train=X_train.values,
+                X_train=X_train,
                 Y_train=Y_train,
-                X_val=X_val.values,
+                X_val=X_val,
                 Y_val=Y_val,
-                random_seed=i + random_seed_start,
+                random_seed=random_seed,
                 **kwargs,
             )
+
+            # If our data is large, we don't want to hold two copies in memory
+            # at once, so we manually release them before the next assignment.
+            del X_train, X_val, Y_train, Y_val
 
             Shap_values = np.abs(Shap_values)
 
@@ -172,11 +175,20 @@ class ShapExplainer(ABC):
                 Shap_values = np.max(Shap_values, axis=0)
 
             # TODO: consider to convert to even float16?
-            shaps += [np.mean(Shap_values, axis=0).astype("float32")]
+            Shap_values = np.mean(Shap_values, axis=0).astype("float32")
+
+            shaps += [Shap_values]
+
+            # Python's reference-counting garbage collection has a hard time
+            # cleaning up after performing some of the work above. Running a
+            # manual garbage collection here keeps memory usage from increasing
+            # on every iteration.
+            gc.collect()
+
 
         shaps = np.array(shaps)
 
-        return pd.DataFrame(data=shaps, columns=X_train.columns.values)
+        return pd.DataFrame(data=shaps, columns=X.columns.values)
 
     def _get_more_tags(self):
         return {}
