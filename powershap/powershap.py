@@ -361,13 +361,26 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if sklearn.__version__.startswith("0."):
             # Log the feature names if we have sklearn 0.x
             self._log_feature_names_sklean_v0(X)
-        # Perform the necessary sklearn checks -> X and y are both ndarray
-        # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x)
+
+        # Perform the necessary sklearn checks -> X and y are both ndarray.
+        # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x).
+        #
+        # These two operations (_validate_data and pd.DataFrame) will also copy
+        # the data into a new place in memory, avoiding data mutation. How this
+        # happens may not be obvious at first glance:
+        #
+        # 1. _validate_data ensures that the data is a numpy array, copying it
+        # upon conversion if necessary.
+        #
+        # 2. pd.DataFrame then copies X, which is now an numpy array, into a
+        # new pandas dataframe.
+        #
+        # If this is changed in some way which would allow explain() to mutate
+        # the original data, it should cause the data mutation tests to fail.
         X, y = self._explainer._validate_data(self._validate_data, X, y, multi_output=True)
+        X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
         self._print("Starting powershap")
-
-        X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
         loop_its = self.power_iterations
         if self.automatic:
