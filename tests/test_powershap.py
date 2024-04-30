@@ -1,5 +1,7 @@
 __author__ = "Jeroen Van Der Donckt"
 
+import hashlib
+
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier, CatBoostRegressor
@@ -7,8 +9,6 @@ from catboost import CatBoostClassifier, CatBoostRegressor
 from powershap import PowerShap
 
 from .conftest import dummy_classification, dummy_regression
-
-import hashlib
 
 ### DEFAULT MODEL & AUTOMATIC MODE
 
@@ -251,8 +251,7 @@ def test_powershap_cv_groupshufflesplit(dummy_classification):
 
 
 def test_no_mutate_df(dummy_classification):
-    """Ensure that powershap fit doesn't mutate an input pandas dataframe.
-    """
+    """Ensure that powershap fit doesn't mutate an input pandas dataframe."""
     X, y = dummy_classification
     n_informative = sum([c.startswith("informative") for c in X.columns])
     assert n_informative > 0, "No informative columns in the dummy data!"
@@ -277,8 +276,7 @@ def test_no_mutate_df(dummy_classification):
 
 
 def test_no_mutate_numpy(dummy_classification):
-    """Ensure that powershap fit doesn't mutate an input numpy array.
-    """
+    """Ensure that powershap fit doesn't mutate an input numpy array."""
     X, y = dummy_classification
 
     X = X.to_numpy()

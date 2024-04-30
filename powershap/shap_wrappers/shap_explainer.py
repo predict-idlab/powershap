@@ -1,5 +1,6 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
+import gc
 import warnings
 from abc import ABC
 from copy import copy
@@ -11,8 +12,6 @@ import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from tqdm.auto import tqdm
-
-import gc
 
 
 class ShapExplainer(ABC):
@@ -172,7 +171,8 @@ class ShapExplainer(ABC):
             Shap_values = np.abs(Shap_values)
 
             if len(np.shape(Shap_values)) > 2:
-                Shap_values = np.max(Shap_values, axis=0)
+                # Shap_values = np.max(Shap_values, axis=0)
+                Shap_values = np.max(Shap_values, axis=0).T
 
             # TODO: consider to convert to even float16?
             Shap_values = np.mean(Shap_values, axis=0).astype("float32")
@@ -184,7 +184,6 @@ class ShapExplainer(ABC):
             # manual garbage collection here keeps memory usage from increasing
             # on every iteration.
             gc.collect()
-
 
         shaps = np.array(shaps)
 
@@ -350,7 +349,7 @@ class DeepLearningExplainer(ShapExplainer):
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         import tensorflow as tf
 
-        tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
+        # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
 
         # Fit the model
         PowerShap_model = tf.keras.models.clone_model(self.model)
@@ -359,6 +358,7 @@ class DeepLearningExplainer(ShapExplainer):
             loss=kwargs["loss"],
             optimizer=kwargs["optimizer"],
             metrics=metrics if metrics is None else [metrics],
+            # run_eagerly=True,
         )
         _ = PowerShap_model.fit(
             X_train,
