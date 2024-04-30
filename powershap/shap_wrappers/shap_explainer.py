@@ -1,5 +1,6 @@
 __author__ = "Jarne Verhaeghe, Jeroen Van Der Donckt"
 
+import gc
 import warnings
 from abc import ABC
 from copy import copy
@@ -11,8 +12,6 @@ import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from tqdm.auto import tqdm
-
-import gc
 
 
 class ShapExplainer(ABC):
@@ -184,7 +183,6 @@ class ShapExplainer(ABC):
             # manual garbage collection here keeps memory usage from increasing
             # on every iteration.
             gc.collect()
-
 
         shaps = np.array(shaps)
 
