@@ -9,7 +9,7 @@ repository = "https://github.com/predict-idlab/powershap"
 keywords = ["feature selection", "shap", "data-science", "machine learning"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<=3.12"
+python = ">=3.9,<=3.12"  
 catboost = "^1.0.5"
 statsmodels = "^0.13.2"
 pandas = ">=1.3"
@@ -19,7 +19,10 @@ scikit-learn = "*"
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
-tensorflow = "^2.8.0"
+tensorflow = [
+    { version = "<2.16.0", python = "<3.12"}
+    # support 3.12 when shap support tf 2.16 - https://github.com/shap/shap/issues/3562
+]
 lightgbm = "^3.3.2"
 xgboost = "^1.6.0"
 black = "^22.12.0"
