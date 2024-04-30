@@ -13,7 +13,7 @@ python = ">=3.9,<=3.12"
 catboost = "^1.0.5"
 statsmodels = "^0.13.2"
 pandas = ">=1.3"
-shap = "^0.40"
+shap = "^0.45.0"
 scikit-learn = "*"
 
 [tool.poetry.dev-dependencies]
