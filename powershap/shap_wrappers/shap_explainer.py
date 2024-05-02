@@ -171,10 +171,15 @@ class ShapExplainer(ABC):
             Shap_values = np.abs(Shap_values)
 
             if len(np.shape(Shap_values)) > 2:
+                # SHAPE: (n_samples, n_features, n_outputs)
+                assert len(np.shape(Shap_values)) == 3, "Shap values should be 3D"
+                # in case of multi-output, we take the max of the outputs as the shap value
                 Shap_values = np.max(Shap_values, axis=-1)
+                # new shape = (n_samples, n_features)
 
             # TODO: consider to convert to even float16?
             Shap_values = np.mean(Shap_values, axis=0).astype("float32")
+            # new shape = (n_features,)
 
             shaps += [Shap_values]
 
