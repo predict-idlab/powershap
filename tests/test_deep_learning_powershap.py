@@ -8,6 +8,7 @@ from .conftest import dummy_classification, dummy_regression
 
 # tf.compat.v1.enable_eager_execution()
 
+
 def test_deep_learning_class_powershap(dummy_classification):
     X, y = dummy_classification
     n_informative = sum([c.startswith("informative") for c in X.columns])

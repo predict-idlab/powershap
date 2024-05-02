@@ -350,7 +350,6 @@ class DeepLearningExplainer(ShapExplainer):
         import tensorflow as tf
 
         # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
-
         # Fit the model
         PowerShap_model = tf.keras.models.clone_model(self.model)
         metrics = kwargs.get("nn_metric")

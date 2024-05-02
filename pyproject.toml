@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "powershap"
-version = "0.0.9"
+version = "0.0.10"
 description = "Feature selection using statistical significance of shap values"
 authors = ["Jarne Verhaeghe, Jeroen Van Der Donckt"]
 readme = "README.md"

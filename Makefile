@@ -1,5 +1,5 @@
-isort = isort powershap tests
-black = black powershap tests
+isort = poetry run isort powershap tests
+black = poetry run black powershap tests
 
 .PHONY: format
 format:
@@ -8,7 +8,7 @@ format:
 
 .PHONY: lint
 lint:
-	ruff powershap tests
+	poetry run ruff powershap tests
 	$(isort) --check-only --df
 	$(black) --check --diff
 
