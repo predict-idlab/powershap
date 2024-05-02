@@ -19,3 +19,7 @@ clean:
 	rm -rf .coverage
 	rm -rf .ruff_cache
 	rm -rf catboost_info
+
+.PHONY: test
+test:
+	poetry run pytest --cov=powershap tests/
