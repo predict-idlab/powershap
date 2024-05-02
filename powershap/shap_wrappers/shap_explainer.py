@@ -171,8 +171,7 @@ class ShapExplainer(ABC):
             Shap_values = np.abs(Shap_values)
 
             if len(np.shape(Shap_values)) > 2:
-                # Shap_values = np.max(Shap_values, axis=0)
-                Shap_values = np.max(Shap_values, axis=0).T
+                Shap_values = np.max(Shap_values, axis=-1)
 
             # TODO: consider to convert to even float16?
             Shap_values = np.mean(Shap_values, axis=0).astype("float32")
