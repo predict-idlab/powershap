@@ -166,18 +166,26 @@ class ShapExplainer(ABC):
 
             # If our data is large, we don't want to hold two copies in memory
             # at once, so we manually release them before the next assignment.
+            X_val_shape = X_val.shape
             del X_train, X_val, Y_train, Y_val
 
             Shap_values = np.abs(Shap_values)
 
             if len(np.shape(Shap_values)) > 2:
-                # SHAPE: (n_samples, n_features, n_outputs)
+                # (expected) SHAPE: (n_samples, n_features, n_outputs)
                 assert len(np.shape(Shap_values)) == 3, "Shap values should be 3D"
+                # NOTE: depending on the shap library, the n_output axis location can vary
+                #       so we need to find it dynamically
+                axis = np.where(np.array(Shap_values.shape) == len(np.unique(y)))[0]
+                assert len(axis == 1), "Shap values should have only one axis with n_outputs"
+                axis = axis[0]
+
                 # in case of multi-output, we take the max of the outputs as the shap value
-                Shap_values = np.max(Shap_values, axis=-1)
+                Shap_values = np.max(Shap_values, axis=axis)
                 # new shape = (n_samples, n_features)
 
             # TODO: consider to convert to even float16?
+            assert np.shape(Shap_values) == X_val_shape, "Shap vals should have same shape as X_val"
             Shap_values = np.mean(Shap_values, axis=0).astype("float32")
             # new shape = (n_features,)
 
