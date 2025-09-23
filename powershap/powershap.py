@@ -8,7 +8,7 @@ import sklearn
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted,validate_data
 
 from .shap_wrappers import ShapExplainerFactory
 from .utils import powerSHAP_statistical_analysis
@@ -377,7 +377,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         #
         # If this is changed in some way which would allow explain() to mutate
         # the original data, it should cause the data mutation tests to fail.
-        X, y = self._explainer.validate_data(self.validate_data, X, y, multi_output=True)
+        X, y = validate_data(self, X, y, multi_output=True)
         X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
         self._print("Starting powershap")
