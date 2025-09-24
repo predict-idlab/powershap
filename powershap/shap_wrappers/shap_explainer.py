@@ -343,34 +343,34 @@ class LinearExplainer(ShapExplainer):
 class DeepLearningExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
-        import tensorflow as tf  # ; import torch
+        # import tensorflow as tf  # ; import torch
 
         # import torch  ## TODO: do we support pytorch??
 
-        supported_models = [tf.keras.Model]  # , torch.nn.Module]
-        return isinstance(model, tuple(supported_models))
+        # supported_models = [tf.keras.Model]  # , torch.nn.Module]
+        return None #isinstance(model, tuple(supported_models))
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
-        import tensorflow as tf
+        # import tensorflow as tf
 
         # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
         # Fit the model
-        PowerShap_model = tf.keras.models.clone_model(self.model)
-        metrics = kwargs.get("nn_metric")
-        PowerShap_model.compile(
-            loss=kwargs["loss"],
-            optimizer=kwargs["optimizer"],
-            metrics=metrics if metrics is None else [metrics],
-            # run_eagerly=True,
-        )
-        _ = PowerShap_model.fit(
-            X_train,
-            Y_train,
-            batch_size=kwargs["batch_size"],
-            epochs=kwargs["epochs"],
-            validation_data=(X_val, Y_val),
-            verbose=False,
-        )
-        # Calculate the shap values
-        C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
-        return C_explainer.shap_values(X_val)
+        # PowerShap_model = tf.keras.models.clone_model(self.model)
+        # metrics = kwargs.get("nn_metric")
+        # PowerShap_model.compile(
+        #     loss=kwargs["loss"],
+        #     optimizer=kwargs["optimizer"],
+        #     metrics=metrics if metrics is None else [metrics],
+        #     # run_eagerly=True,
+        # )
+        # _ = PowerShap_model.fit(
+        #     X_train,
+        #     Y_train,
+        #     batch_size=kwargs["batch_size"],
+        #     epochs=kwargs["epochs"],
+        #     validation_data=(X_val, Y_val),
+        #     verbose=False,
+        # )
+        # # Calculate the shap values
+        # C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
+        return None# C_explainer.shap_values(X_val)
