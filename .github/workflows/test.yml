@@ -42,8 +42,11 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        
+    - name: Install llvm on Ubuntu
+      if: runner.os == 'Linux'
+      run: sudo apt-get install llvm # Because https://github.com/slundberg/shap/issues/1854
 
-    - run: sudo apt-get install llvm  # Because https://github.com/slundberg/shap/issues/1854
     - name: Install dependencies
       run: uv sync --locked --all-extras --dev
 
