@@ -1113,7 +1113,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "catboost", specifier = ">=1.0.5,<2" },
+    { name = "catboost", specifier = ">=1.0.5" },
     { name = "pandas", specifier = ">=1.3" },
     { name = "scikit-learn", specifier = ">=1.6" },
     { name = "shap", specifier = ">=0.45.0,<0.46" },
@@ -1124,11 +1124,11 @@ requires-dist = [
 dev = [
     { name = "black", specifier = ">=22.12.0,<23" },
     { name = "isort", specifier = ">=5.11.4,<6" },
-    { name = "lightgbm", specifier = ">=3.3.2,<4" },
+    { name = "lightgbm", specifier = ">=3.3.2" },
     { name = "pytest", specifier = ">=7.1.1,<8" },
     { name = "pytest-cov", specifier = ">=3.0.0,<4" },
     { name = "ruff", specifier = ">=0.0.219,<0.0.220" },
-    { name = "xgboost", specifier = ">=1.6.0,<2" },
+    { name = "xgboost", specifier = ">=1.6.0" },
 ]
 
 [[package]]
