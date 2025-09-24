@@ -47,6 +47,11 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get install llvm # Because https://github.com/slundberg/shap/issues/1854
 
+    - name: Install MSVC build tools on Windows
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v1
+
+
     - name: Install dependencies
       run: uv sync --locked --all-extras --dev
 
