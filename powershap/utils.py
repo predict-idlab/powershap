@@ -61,8 +61,8 @@ def powerSHAP_statistical_analysis(
             required_iterations.append(0)
             effect_size.append(0)
             power_list.append(0)
-
-    print(required_iterations)
+    
+    required_iterations = [x[0] if isinstance(x, list) else x for x in required_iterations]
     
     processed_shaps_df = pd.DataFrame(
         data=np.hstack(
