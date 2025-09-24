@@ -11,6 +11,8 @@ import pandas as pd
 import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
+from sklearn.utils.validation import validate_data
+
 from tqdm.auto import tqdm
 
 
@@ -33,9 +35,13 @@ class ShapExplainer(ABC):
     # Should be implemented by subclass
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         raise NotImplementedError
+    
+    # Should be implemented by explainers that support infinite or nans
+    def validate_data(self, _estimator, X, y, **kwargs):
+        return validate_data(_estimator, X, y, **kwargs)
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        return validate_data(X, y, **kwargs)
+    # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+    #     return validate_data(X, y, **kwargs)
 
     # Should be implemented by subclass
     @staticmethod
@@ -208,10 +214,16 @@ class CatboostExplainer(ShapExplainer):
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+    # def validate_data(self, validate_data: Callable, X, y, **kwargs):
+    #     kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
+    #     kwargs["dtype"] = None  # allow non-numeric data
+    #     return validate_data(self, validate_data, X, y, **kwargs)
+
+    def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        return super()._validate_data(validate_data, X, y, **kwargs)
+        return validate_data(_estimator, X, y, **kwargs)
+
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
@@ -236,9 +248,13 @@ class LGBMExplainer(ShapExplainer):
         supported_models = [LGBMClassifier, LGBMRegressor]
         return isinstance(model, tuple(supported_models))
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+    # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
+    #     kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
+    #     return super()._validate_data(validate_data, X, y, **kwargs)
+    
+    def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
-        return super()._validate_data(validate_data, X, y, **kwargs)
+        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
@@ -265,10 +281,15 @@ class XGBoostExplainer(ShapExplainer):
         supported_models = [XGBClassifier, XGBRegressor]
         return isinstance(model, tuple(supported_models))
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
+    # def validate_data(self, validate_data: Callable, X, y, **kwargs):
+    #     kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
+    #     kwargs["dtype"] = None  # allow non-numeric data
+    #     return super().validate_data(validate_data, X, y, **kwargs)
+    
+    def validate_data(self, _estimator, X, y, **kwargs):
+        kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        return super()._validate_data(validate_data, X, y, **kwargs)
+        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
@@ -349,6 +370,7 @@ class DeepLearningExplainer(ShapExplainer):
 
         # supported_models = [tf.keras.Model]  # , torch.nn.Module]
         return None #isinstance(model, tuple(supported_models))
+    
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # import tensorflow as tf

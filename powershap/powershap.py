@@ -377,7 +377,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
         #
         # If this is changed in some way which would allow explain() to mutate
         # the original data, it should cause the data mutation tests to fail.
-        X, y = validate_data(self, X, y, multi_output=True)
+        
+        # X, y = validate_data(self, X, y, multi_output=True)
+        X, y = self._explainer.validate_data(self, X, y, multi_output=True)
         X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
         self._print("Starting powershap")
