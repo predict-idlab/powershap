@@ -62,7 +62,8 @@ def powerSHAP_statistical_analysis(
             effect_size.append(0)
             power_list.append(0)
 
-
+    print(required_iterations)
+    
     processed_shaps_df = pd.DataFrame(
         data=np.hstack(
             [
