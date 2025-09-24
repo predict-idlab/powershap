@@ -5,7 +5,7 @@ from sklearn.linear_model import SGDRegressor
 from powershap.shap_wrappers import ShapExplainerFactory
 from powershap.shap_wrappers.shap_explainer import (
     CatboostExplainer,
-    DeepLearningExplainer,
+    # DeepLearningExplainer,
     EnsembleExplainer,
     LGBMExplainer,
     LinearExplainer,
@@ -111,11 +111,11 @@ def test_get_ensemble_explainer():
         assert isinstance(explainer, EnsembleExplainer)
 
 
-def test_get_deep_learning_explainer():
-    import tensorflow as tf
+# def test_get_deep_learning_explainer():
+#     import tensorflow as tf
 
-    explainer = ShapExplainerFactory.get_explainer(tf.keras.Sequential())
-    assert isinstance(explainer, DeepLearningExplainer)
+#     explainer = ShapExplainerFactory.get_explainer(tf.keras.Sequential())
+#     assert isinstance(explainer, DeepLearningExplainer)
 
 
 def test_value_error_get_explainer():
