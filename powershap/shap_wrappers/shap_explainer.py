@@ -36,9 +36,10 @@ class ShapExplainer(ABC):
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         raise NotImplementedError
     
-    # Should be implemented by explainers that support infinite or nans
+    # Should be implemented by explainers themselves
     def validate_data(self, _estimator, X, y, **kwargs):
-        return validate_data(_estimator, X, y, **kwargs)
+        # return validate_data(_estimator, X, y, **kwargs)
+        raise NotImplementedError
 
     # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
     #     return validate_data(X, y, **kwargs)
@@ -319,7 +320,10 @@ class EnsembleExplainer(ShapExplainer):
 
         supported_models = [ForestRegressor, ForestClassifier, BaseGradientBoosting]
         return issubclass(type(model), tuple(supported_models))
-
+    
+    def validate_data(self, _estimator, X, y, **kwargs):
+        return validate_data(_estimator, X, y, **kwargs)
+    
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
 
@@ -342,6 +346,9 @@ class LinearExplainer(ShapExplainer):
 
         supported_models = [LinearClassifierMixin, LinearModel, BaseSGD]
         return issubclass(type(model), tuple(supported_models))
+    
+    def validate_data(self, _estimator, X, y, **kwargs):
+        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
