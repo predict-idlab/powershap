@@ -221,7 +221,7 @@ class CatboostExplainer(ShapExplainer):
     #     return validate_data(self, validate_data, X, y, **kwargs)
 
     def validate_data(self, _estimator, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
+        kwargs["ensure_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
         return validate_data(_estimator, X, y, **kwargs)
 
@@ -254,7 +254,7 @@ class LGBMExplainer(ShapExplainer):
     #     return super()._validate_data(validate_data, X, y, **kwargs)
     
     def validate_data(self, _estimator, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
+        kwargs["ensure_all_finite"] = False  # lgbm allows NaNs and infs in X
         return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
@@ -288,7 +288,7 @@ class XGBoostExplainer(ShapExplainer):
     #     return super().validate_data(validate_data, X, y, **kwargs)
     
     def validate_data(self, _estimator, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
+        kwargs["ensure_all_finite"] = False  # xgboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
         return validate_data(_estimator, X, y, **kwargs)
 
