@@ -223,7 +223,6 @@ class CatboostExplainer(ShapExplainer):
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        _estimator.input_tags.allow_nan = True
         return validate_data(_estimator, X, y, **kwargs)
 
 
@@ -256,7 +255,6 @@ class LGBMExplainer(ShapExplainer):
     
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # lgbm allows NaNs and infs in X
-        _estimator.input_tags.allow_nan = True
         return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
@@ -292,7 +290,6 @@ class XGBoostExplainer(ShapExplainer):
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # xgboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        _estimator.input_tags.allow_nan = True
         return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
