@@ -377,7 +377,7 @@ class PowerShap(SelectorMixin, BaseEstimator):
         #
         # If this is changed in some way which would allow explain() to mutate
         # the original data, it should cause the data mutation tests to fail.
-        
+
         # X, y = validate_data(self, X, y, multi_output=True)
         X, y = self._explainer.validate_data(self, X, y, multi_output=True)
         X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
@@ -528,9 +528,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if hasattr(self, "feature_names_in_") and isinstance(X, pd.DataFrame):
             assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
-                super().transform(X), columns=self.feature_names_in_[self._get_support_mask()]
+                super()._transform(X), columns=self.feature_names_in_[self._get_support_mask()]
             )
-        return super().transform(X)
+        return super()._transform(X)
 
     def _more_tags(self):
         return self._explainer._get_more_tags()
