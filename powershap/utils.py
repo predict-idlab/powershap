@@ -61,14 +61,7 @@ def powerSHAP_statistical_analysis(
             required_iterations.append(0)
             effect_size.append(0)
             power_list.append(0)
-    
-    #This code is required because if statsmodels does not converge, due to numpy issues (see closed issue for inhomogeneous shape) the code does not work otherwise
-    flattened_required_iterations = []
-    for item in required_iterations:
-        if isinstance(item, np.ndarray):
-            flattened_required_iterations.extend(item.tolist())
-    else:
-        flattened_required_iterations.append(item)
+
 
     processed_shaps_df = pd.DataFrame(
         data=np.hstack(
@@ -77,7 +70,7 @@ def powerSHAP_statistical_analysis(
                 np.reshape(np.array(p_values), (len(p_values), 1)),
                 np.reshape(np.array(effect_size), (len(effect_size), 1)),
                 np.reshape(np.array(power_list), (len(power_list), 1)),
-                np.reshape(np.array(flattened_required_iterations), (len(flattened_required_iterations), 1)),
+                np.reshape(np.array(required_iterations), (len(required_iterations), 1)),
             ]
         ),
         columns=[
