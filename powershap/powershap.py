@@ -10,6 +10,8 @@ from sklearn.feature_selection import SelectorMixin
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils.validation import check_is_fitted,validate_data
 
+
+
 from .shap_wrappers import ShapExplainerFactory
 from .utils import powerSHAP_statistical_analysis
 
@@ -528,9 +530,13 @@ class PowerShap(SelectorMixin, BaseEstimator):
         if hasattr(self, "feature_names_in_") and isinstance(X, pd.DataFrame):
             assert np.all(X.columns.values == self.feature_names_in_)
             return pd.DataFrame(
-                super()._transform(X), columns=self.feature_names_in_[self._get_support_mask()]
+                super().transform(X), columns=self.feature_names_in_[self._get_support_mask()]
             )
-        return super()._transform(X)
+        return super().transform(X)
 
-    def _more_tags(self):
+    # def _more_tags(self):
+    #     return self._explainer._get_more_tags()
+
+    def __sklearn_tags__(self):
         return self._explainer._get_more_tags()
+

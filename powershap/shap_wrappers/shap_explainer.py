@@ -13,6 +13,16 @@ from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import validate_data
 
+from sklearn.utils._tags import (
+    ClassifierTags,
+    RegressorTags,
+    Tags,
+    TargetTags,
+    InputTags,
+    TransformerTags,
+    get_tags,
+)
+
 from tqdm.auto import tqdm
 
 
@@ -38,8 +48,7 @@ class ShapExplainer(ABC):
     
     # Should be implemented by explainers themselves
     def validate_data(self, _estimator, X, y, **kwargs):
-        # return validate_data(_estimator, X, y, **kwargs)
-        raise NotImplementedError
+        return validate_data(_estimator, X, y, **kwargs)
 
     # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
     #     return validate_data(X, y, **kwargs)
@@ -201,7 +210,10 @@ class ShapExplainer(ABC):
         return pd.DataFrame(data=shaps, columns=X.columns.values)
 
     def _get_more_tags(self):
-        return {}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+        )
 
 
 ### CATBOOST
@@ -235,8 +247,11 @@ class CatboostExplainer(ShapExplainer):
         return C_explainer.shap_values(X_val)
 
     def _get_more_tags(self):
-        return {"allow_nan": True}
-
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 ### LGBM
 
@@ -268,7 +283,11 @@ class LGBMExplainer(ShapExplainer):
         return C_explainer.shap_values(X_val)
 
     def _get_more_tags(self):
-        return {"allow_nan": True}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 
 ### XGBOOST
@@ -301,7 +320,11 @@ class XGBoostExplainer(ShapExplainer):
         return C_explainer.shap_values(X_val)
 
     def _get_more_tags(self):
-        return {"allow_nan": True}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 
 ### RANDOMFOREST
@@ -320,10 +343,7 @@ class EnsembleExplainer(ShapExplainer):
 
         supported_models = [ForestRegressor, ForestClassifier, BaseGradientBoosting]
         return issubclass(type(model), tuple(supported_models))
-    
-    def validate_data(self, _estimator, X, y, **kwargs):
-        return validate_data(_estimator, X, y, **kwargs)
-    
+
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
 
@@ -346,9 +366,6 @@ class LinearExplainer(ShapExplainer):
 
         supported_models = [LinearClassifierMixin, LinearModel, BaseSGD]
         return issubclass(type(model), tuple(supported_models))
-    
-    def validate_data(self, _estimator, X, y, **kwargs):
-        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
