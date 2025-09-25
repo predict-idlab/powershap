@@ -388,7 +388,7 @@ class PipelineExplainer(ShapExplainer):
     def supports_model(model) -> bool:
         from sklearn.pipeline import Pipeline
 
-        return isinstance(type(model), Pipeline)
+        return issubclass(type(model), Pipeline)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         from sklearn.base import clone
