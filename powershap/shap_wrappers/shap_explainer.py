@@ -382,7 +382,8 @@ class PipelineExplainer(ShapExplainer):
 
         """
         assert self.supports_model(model)
-        self.shap_explainer = ShapExplainerFactory.get_explainer(model=ShapExplainer(model.steps[-1][1]))
+        self.shap_explainer = ShapExplainerFactory.get_explainer(model=model.steps[-1][1])
+        self.model = model
 
     @staticmethod
     def supports_model(model) -> bool:
@@ -419,7 +420,7 @@ class PipelineExplainer(ShapExplainer):
 
     def validate_data(self, _estimator, X, y, **kwargs):
         # The assumption here is that the used model is the limiting factor for validation of the data
-        self.shap_explainer.validate_data(_estimator, X, y, **kwargs)
+        return self.shap_explainer.validate_data(_estimator, X, y, **kwargs)
     
     def _get_more_tags(self):
         return self.shap_explainer._get_more_tags()
