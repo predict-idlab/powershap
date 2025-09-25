@@ -12,6 +12,7 @@ import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import validate_data
+import ShapExplainerFactory
 
 from sklearn.utils._tags import (
     ClassifierTags,
@@ -366,6 +367,62 @@ class LinearExplainer(ShapExplainer):
         # Calculate the shap values
         C_explainer = shap.explainers.Linear(PowerShap_model, X_train)
         return C_explainer.shap_values(X_val)
+
+# This support an Sklearn Pipeline Explainer, which will be a wrapper around a ShapExplainer
+class PipelineExplainer(ShapExplainer):
+
+    def __init__(self, model: Any):
+        """Create a Powershap explainer instance.
+
+        Parameters
+        ----------
+        model: Any
+            The  model from which powershap will use its shap values to perform feature
+            selection.
+
+        """
+        assert self.supports_model(model)
+        self.shap_explainer = ShapExplainerFactory.get_explainer(model=ShapExplainer(model.steps[-1][1]))
+
+    @staticmethod
+    def supports_model(model) -> bool:
+        from sklearn.pipeline import Pipeline
+
+        return isinstance(model, Pipeline)
+
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
+        from sklearn.base import clone
+        from sklearn.pipeline import Pipeline
+        
+        # Because the ShapExplainer behavior is different for each model, we extract the model and only keep the preprocessing pipeline
+        powershap_pipeline = clone(Pipeline(self.model.steps[:-1]))
+
+        # 2. Build the parameter dictionary to set the random states to the random seed
+        params_to_set = {}
+        for step_name, step_estimator in powershap_pipeline.steps:
+            if 'random_state' in step_estimator.get_params():
+                # Format: 'step_name__parameter_name'
+                params_to_set[f'{step_name}__random_state'] = random_seed
+
+        # 3. Apply the parameters to the cloned pipeline
+        powershap_pipeline.set_params(**params_to_set)
+                
+        # We fit the pipeline here to be used to transform the data
+        powershap_pipeline.fit(X_train, Y_train, **kwargs)
+
+        # Get the transformed data from all the preceding steps
+        transformed_X_train = powershap_pipeline.transform(X_train)
+        transformed_X_val = powershap_pipeline.transform(X_val)
+
+        return self.shap_explainer._fit_get_shap(transformed_X_train, Y_train, transformed_X_val, Y_val, random_seed, **kwargs)
+
+
+    def validate_data(self, _estimator, X, y, **kwargs):
+        # The assumption here is that the used model is the limiting factor for validation of the data
+        self.shap_explainer.validate_data(_estimator, X, y, **kwargs)
+    
+    def _get_more_tags(self):
+        return self.shap_explainer._get_more_tags()
 
 
 ### DEEP LEARNING

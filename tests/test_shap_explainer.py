@@ -10,6 +10,7 @@ from powershap.shap_wrappers.shap_explainer import (
     LGBMExplainer,
     LinearExplainer,
     XGBoostExplainer,
+    PipelineExplainer,
 )
 
 
@@ -109,6 +110,69 @@ def test_get_ensemble_explainer():
     for model_class in model_classes:
         explainer = ShapExplainerFactory.get_explainer(model_class())
         assert isinstance(explainer, EnsembleExplainer)
+
+def test_get_pipeline_explainer():
+    from sklearn.linear_model import (
+        LinearRegression,
+        LogisticRegression,
+        LogisticRegressionCV,
+        PassiveAggressiveClassifier,
+        Perceptron,
+        Ridge,
+        RidgeClassifier,
+        RidgeClassifierCV,
+        RidgeCV,
+        SGDClassifier,
+        SGDRegressor,
+    )
+    from sklearn.ensemble import (
+        ExtraTreesClassifier,
+        ExtraTreesRegressor,
+        GradientBoostingClassifier,
+        GradientBoostingRegressor,
+        RandomForestClassifier,
+        RandomForestRegressor,
+    )
+    from catboost import CatBoostClassifier, CatBoostRegressor
+    from lightgbm import LGBMClassifier, LGBMRegressor
+    from xgboost import XGBClassifier, XGBRegressor
+
+    model_classes = [
+        LogisticRegression,
+        LogisticRegressionCV,
+        PassiveAggressiveClassifier,
+        Perceptron,
+        RidgeClassifier,
+        RidgeClassifierCV,
+        SGDClassifier,
+        LinearRegression,
+        Ridge,
+        RidgeCV,
+        SGDRegressor,
+        RandomForestClassifier,
+        GradientBoostingClassifier,
+        ExtraTreesClassifier,
+        RandomForestRegressor,
+        GradientBoostingRegressor,
+        ExtraTreesRegressor,
+        XGBClassifier, XGBRegressor,
+        LGBMClassifier, LGBMRegressor,
+        CatBoostClassifier, CatBoostRegressor,
+    ]
+    from sklearn.pipeline import Pipeline
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import FunctionTransformer
+
+
+
+    for model_class in model_classes:
+        DummyScaler = FunctionTransformer(lambda x: x)
+
+        make_pipeline(DummyScaler, model_class)
+
+        explainer = ShapExplainerFactory.get_explainer(make_pipeline)
+        assert isinstance(explainer, PipelineExplainer)
+
 
 
 # def test_get_deep_learning_explainer():
