@@ -177,7 +177,7 @@ def test_pipeline_catboost_class_standardscaler_powershap(dummy_classification):
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=make_pipeline(StandardScaler, CatBoostClassifier(n_estimators=250, verbose=0)), power_iterations=15, automatic=False
+        model=make_pipeline(StandardScaler(), CatBoostClassifier(n_estimators=250, verbose=0)), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
@@ -194,7 +194,7 @@ def test_pipeline_catboost_class_maxabsscalerr_robustscaler_powershap(dummy_clas
     assert n_informative > 0, "No informative columns in the dummy data!"
 
     selector = PowerShap(
-        model=make_pipeline(MaxAbsScaler, RobustScaler, CatBoostClassifier(n_estimators=250, verbose=0)), power_iterations=15, automatic=False
+        model=make_pipeline(MaxAbsScaler(), RobustScaler(), CatBoostClassifier(n_estimators=250, verbose=0)), power_iterations=15, automatic=False
     )
 
     selector.fit(X, y)
