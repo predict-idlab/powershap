@@ -12,7 +12,7 @@ import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import validate_data
-import ShapExplainerFactory
+from .shap_explainer_factory import ShapExplainerFactory
 
 from sklearn.utils._tags import (
     ClassifierTags,
