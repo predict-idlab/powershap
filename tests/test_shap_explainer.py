@@ -167,8 +167,8 @@ def test_get_pipeline_explainer():
 
     for model_class in model_classes:
         DummyScaler = FunctionTransformer(lambda x: x)
-        explainer = ShapExplainerFactory.get_explainer(make_pipeline(DummyScaler, model_class))
-        
+        explainer = ShapExplainerFactory.get_explainer(make_pipeline(DummyScaler, model_class()))
+
         assert isinstance(explainer, PipelineExplainer)
 
 
