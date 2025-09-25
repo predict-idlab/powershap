@@ -62,6 +62,8 @@ def powerSHAP_statistical_analysis(
             effect_size.append(0)
             power_list.append(0)
     
+    # The solve power of statsmodels might not always converge. If that happens it outputs a list of length 1 instead of a float
+    # Numpy typing requires nonambiguous typing so this line is to ensure the cast to np.array later on will not result in a ValueError due to a failed converge
     required_iterations = [x[0] if not (isinstance(x, float) or isinstance(x, int)) else x for x in required_iterations]
     
     processed_shaps_df = pd.DataFrame(

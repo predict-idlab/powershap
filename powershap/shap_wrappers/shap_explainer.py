@@ -46,12 +46,9 @@ class ShapExplainer(ABC):
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         raise NotImplementedError
     
-    # Should be implemented by explainers themselves
+    # If the explainer supports nan values, infinite values, or others, the explainer must override this function
     def validate_data(self, _estimator, X, y, **kwargs):
         return validate_data(_estimator, X, y, **kwargs)
-
-    # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-    #     return validate_data(X, y, **kwargs)
 
     # Should be implemented by subclass
     @staticmethod
@@ -241,6 +238,7 @@ class CatboostExplainer(ShapExplainer):
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
         return Tags(
             estimator_type=None,
@@ -273,6 +271,7 @@ class LGBMExplainer(ShapExplainer):
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
         return Tags(
             estimator_type=None,
@@ -305,6 +304,7 @@ class XGBoostExplainer(ShapExplainer):
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
         return Tags(
             estimator_type=None,
@@ -370,7 +370,8 @@ class LinearExplainer(ShapExplainer):
 
 ### DEEP LEARNING
 
-
+# Tensorflow has been phased out and current version does not support deepLearning approach
+# TODO add support for Pytorch instead
 class DeepLearningExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
@@ -379,30 +380,31 @@ class DeepLearningExplainer(ShapExplainer):
         # import torch  ## TODO: do we support pytorch??
 
         # supported_models = [tf.keras.Model]  # , torch.nn.Module]
-        return None #isinstance(model, tuple(supported_models))
+        # return isinstance(model, tuple(supported_models))
+        return False
     
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
-        # import tensorflow as tf
+    # def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
+    #     # import tensorflow as tf
 
-        # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
-        # Fit the model
-        # PowerShap_model = tf.keras.models.clone_model(self.model)
-        # metrics = kwargs.get("nn_metric")
-        # PowerShap_model.compile(
-        #     loss=kwargs["loss"],
-        #     optimizer=kwargs["optimizer"],
-        #     metrics=metrics if metrics is None else [metrics],
-        #     # run_eagerly=True,
-        # )
-        # _ = PowerShap_model.fit(
-        #     X_train,
-        #     Y_train,
-        #     batch_size=kwargs["batch_size"],
-        #     epochs=kwargs["epochs"],
-        #     validation_data=(X_val, Y_val),
-        #     verbose=False,
-        # )
-        # # Calculate the shap values
-        # C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
-        return None# C_explainer.shap_values(X_val)
+    #     # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
+    #     # Fit the model
+    #     # PowerShap_model = tf.keras.models.clone_model(self.model)
+    #     # metrics = kwargs.get("nn_metric")
+    #     # PowerShap_model.compile(
+    #     #     loss=kwargs["loss"],
+    #     #     optimizer=kwargs["optimizer"],
+    #     #     metrics=metrics if metrics is None else [metrics],
+    #     #     # run_eagerly=True,
+    #     # )
+    #     # _ = PowerShap_model.fit(
+    #     #     X_train,
+    #     #     Y_train,
+    #     #     batch_size=kwargs["batch_size"],
+    #     #     epochs=kwargs["epochs"],
+    #     #     validation_data=(X_val, Y_val),
+    #     #     verbose=False,
+    #     # )
+    #     # # Calculate the shap values
+    #     # C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
+    #     return C_explainer.shap_values(X_val)

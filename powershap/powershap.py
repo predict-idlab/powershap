@@ -534,9 +534,8 @@ class PowerShap(SelectorMixin, BaseEstimator):
             )
         return super().transform(X)
 
-    # def _more_tags(self):
-    #     return self._explainer._get_more_tags()
-
+    # Since sklearn 1.6, the tag system changed so this function is necessary to make it compatible
+    # https://scikit-learn.org/stable/auto_examples/release_highlights/plot_release_highlights_1_6_0.html#improvements-to-the-developer-api-for-third-party-libraries
     def __sklearn_tags__(self):
         return self._explainer._get_more_tags()
 
