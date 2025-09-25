@@ -1,6 +1,6 @@
 [project]
 name = "powershap"
-version = "0.0.12"
+version = "0.1.0"
 description = "Feature selection using statistical significance of shap values"
 authors = [{ name = "Jarne Verhaeghe, Jeroen Van Der Donckt" }]
 requires-python = ">=3.9,<=3.13"
