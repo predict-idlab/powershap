@@ -227,11 +227,6 @@ class CatboostExplainer(ShapExplainer):
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
 
-    # def validate_data(self, validate_data: Callable, X, y, **kwargs):
-    #     kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
-    #     kwargs["dtype"] = None  # allow non-numeric data
-    #     return validate_data(self, validate_data, X, y, **kwargs)
-
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
@@ -241,7 +236,7 @@ class CatboostExplainer(ShapExplainer):
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         PowerShap_model = self.model.copy().set_params(random_seed=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val), **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
@@ -264,10 +259,6 @@ class LGBMExplainer(ShapExplainer):
         supported_models = [LGBMClassifier, LGBMRegressor]
         return isinstance(model, tuple(supported_models))
 
-    # def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-    #     kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
-    #     return super()._validate_data(validate_data, X, y, **kwargs)
-    
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # lgbm allows NaNs and infs in X
         return validate_data(_estimator, X, y, **kwargs)
@@ -277,7 +268,7 @@ class LGBMExplainer(ShapExplainer):
         # Why we need to use deepcopy and delete LGBM __deepcopy__
         # https://github.com/microsoft/LightGBM/issues/4085
         PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val), **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
@@ -300,11 +291,6 @@ class XGBoostExplainer(ShapExplainer):
 
         supported_models = [XGBClassifier, XGBRegressor]
         return isinstance(model, tuple(supported_models))
-
-    # def validate_data(self, validate_data: Callable, X, y, **kwargs):
-    #     kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
-    #     kwargs["dtype"] = None  # allow non-numeric data
-    #     return super().validate_data(validate_data, X, y, **kwargs)
     
     def validate_data(self, _estimator, X, y, **kwargs):
         kwargs["ensure_all_finite"] = False  # xgboost allows NaNs and infs in X
@@ -314,7 +300,7 @@ class XGBoostExplainer(ShapExplainer):
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         PowerShap_model = copy(self.model).set_params(random_state=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=[(X_val, Y_val)])
+        PowerShap_model.fit(X_train, Y_train, eval_set=[(X_val, Y_val)], **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
@@ -349,7 +335,7 @@ class EnsembleExplainer(ShapExplainer):
 
         # Fit the model
         PowerShap_model = clone(self.model).set_params(random_state=random_seed)
-        PowerShap_model.fit(X_train, Y_train)
+        PowerShap_model.fit(X_train, Y_train, **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
@@ -375,7 +361,7 @@ class LinearExplainer(ShapExplainer):
             PowerShap_model = clone(self.model).set_params(random_state=random_seed)
         except Exception:
             PowerShap_model = clone(self.model)
-        PowerShap_model.fit(X_train, Y_train)
+        PowerShap_model.fit(X_train, Y_train, **kwargs)
 
         # Calculate the shap values
         C_explainer = shap.explainers.Linear(PowerShap_model, X_train)
