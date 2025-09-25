@@ -8,7 +8,9 @@ import sklearn
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted,validate_data
+
+
 
 from .shap_wrappers import ShapExplainerFactory
 from .utils import powerSHAP_statistical_analysis
@@ -365,11 +367,11 @@ class PowerShap(SelectorMixin, BaseEstimator):
         # Perform the necessary sklearn checks -> X and y are both ndarray.
         # Logs the feature names as well (in self.feature_names_in_ in sklearn 1.x).
         #
-        # These two operations (_validate_data and pd.DataFrame) will also copy
+        # These two operations (validate_data and pd.DataFrame) will also copy
         # the data into a new place in memory, avoiding data mutation. How this
         # happens may not be obvious at first glance:
         #
-        # 1. _validate_data ensures that the data is a numpy array, copying it
+        # 1. validate_data ensures that the data is a numpy array, copying it
         # upon conversion if necessary.
         #
         # 2. pd.DataFrame then copies X, which is now an numpy array, into a
@@ -377,7 +379,9 @@ class PowerShap(SelectorMixin, BaseEstimator):
         #
         # If this is changed in some way which would allow explain() to mutate
         # the original data, it should cause the data mutation tests to fail.
-        X, y = self._explainer._validate_data(self._validate_data, X, y, multi_output=True)
+
+        # X, y = validate_data(self, X, y, multi_output=True)
+        X, y = self._explainer.validate_data(self, X, y, multi_output=True)
         X = pd.DataFrame(data=X, columns=list(range(X.shape[1])))
 
         self._print("Starting powershap")
@@ -530,5 +534,8 @@ class PowerShap(SelectorMixin, BaseEstimator):
             )
         return super().transform(X)
 
-    def _more_tags(self):
+    # Since sklearn 1.6, the tag system changed so this function is necessary to make it compatible
+    # https://scikit-learn.org/stable/auto_examples/release_highlights/plot_release_highlights_1_6_0.html#improvements-to-the-developer-api-for-third-party-libraries
+    def __sklearn_tags__(self):
         return self._explainer._get_more_tags()
+

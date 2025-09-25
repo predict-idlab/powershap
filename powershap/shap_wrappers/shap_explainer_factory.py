@@ -10,6 +10,7 @@ from .shap_explainer import (
     LinearExplainer,
     ShapExplainer,
     XGBoostExplainer,
+    PipelineExplainer
 )
 
 
@@ -23,6 +24,7 @@ class ShapExplainerFactory:
         EnsembleExplainer,
         LinearExplainer,
         DeepLearningExplainer,
+        PipelineExplainer
     ]
 
     @classmethod

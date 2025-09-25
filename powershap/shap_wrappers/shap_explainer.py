@@ -11,6 +11,18 @@ import pandas as pd
 import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
+from sklearn.utils.validation import validate_data
+
+from sklearn.utils._tags import (
+    ClassifierTags,
+    RegressorTags,
+    Tags,
+    TargetTags,
+    InputTags,
+    TransformerTags,
+    get_tags,
+)
+
 from tqdm.auto import tqdm
 
 
@@ -33,9 +45,10 @@ class ShapExplainer(ABC):
     # Should be implemented by subclass
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         raise NotImplementedError
-
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        return validate_data(X, y, **kwargs)
+    
+    # If the explainer supports nan values, infinite values, or others, the explainer must override this function
+    def validate_data(self, _estimator, X, y, **kwargs):
+        return validate_data(_estimator, X, y, **kwargs)
 
     # Should be implemented by subclass
     @staticmethod
@@ -194,7 +207,10 @@ class ShapExplainer(ABC):
         return pd.DataFrame(data=shaps, columns=X.columns.values)
 
     def _get_more_tags(self):
-        return {}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+        )
 
 
 ### CATBOOST
@@ -208,22 +224,27 @@ class CatboostExplainer(ShapExplainer):
         supported_models = [CatBoostRegressor, CatBoostClassifier]
         return isinstance(model, tuple(supported_models))
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # catboost allows NaNs and infs in X
+    def validate_data(self, _estimator, X, y, **kwargs):
+        kwargs["ensure_all_finite"] = False  # catboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        return super()._validate_data(validate_data, X, y, **kwargs)
+        return validate_data(_estimator, X, y, **kwargs)
+
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         PowerShap_model = self.model.copy().set_params(random_seed=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val), **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
-        return {"allow_nan": True}
-
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 ### LGBM
 
@@ -236,22 +257,27 @@ class LGBMExplainer(ShapExplainer):
         supported_models = [LGBMClassifier, LGBMRegressor]
         return isinstance(model, tuple(supported_models))
 
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # lgbm allows NaNs and infs in X
-        return super()._validate_data(validate_data, X, y, **kwargs)
+    def validate_data(self, _estimator, X, y, **kwargs):
+        kwargs["ensure_all_finite"] = False  # lgbm allows NaNs and infs in X
+        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         # Why we need to use deepcopy and delete LGBM __deepcopy__
         # https://github.com/microsoft/LightGBM/issues/4085
         PowerShap_model = copy(self.model).set_params(random_seed=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val))
+        PowerShap_model.fit(X_train, Y_train, eval_set=(X_val, Y_val), **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
-        return {"allow_nan": True}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 
 ### XGBOOST
@@ -264,22 +290,27 @@ class XGBoostExplainer(ShapExplainer):
 
         supported_models = [XGBClassifier, XGBRegressor]
         return isinstance(model, tuple(supported_models))
-
-    def _validate_data(self, validate_data: Callable, X, y, **kwargs):
-        kwargs["force_all_finite"] = False  # xgboost allows NaNs and infs in X
+    
+    def validate_data(self, _estimator, X, y, **kwargs):
+        kwargs["ensure_all_finite"] = False  # xgboost allows NaNs and infs in X
         kwargs["dtype"] = None  # allow non-numeric data
-        return super()._validate_data(validate_data, X, y, **kwargs)
+        return validate_data(_estimator, X, y, **kwargs)
 
     def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
         # Fit the model
         PowerShap_model = copy(self.model).set_params(random_state=random_seed)
-        PowerShap_model.fit(X_train, Y_train, eval_set=[(X_val, Y_val)])
+        PowerShap_model.fit(X_train, Y_train, eval_set=[(X_val, Y_val)], **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
 
+    # Function to define the tags which will be used in sklearn pipelines
     def _get_more_tags(self):
-        return {"allow_nan": True}
+        return Tags(
+            estimator_type=None,
+            target_tags=TargetTags(required=False),
+            input_tags=InputTags(allow_nan=True)
+        )
 
 
 ### RANDOMFOREST
@@ -304,7 +335,7 @@ class EnsembleExplainer(ShapExplainer):
 
         # Fit the model
         PowerShap_model = clone(self.model).set_params(random_state=random_seed)
-        PowerShap_model.fit(X_train, Y_train)
+        PowerShap_model.fit(X_train, Y_train, **kwargs)
         # Calculate the shap values
         C_explainer = shap.TreeExplainer(PowerShap_model)
         return C_explainer.shap_values(X_val)
@@ -330,47 +361,108 @@ class LinearExplainer(ShapExplainer):
             PowerShap_model = clone(self.model).set_params(random_state=random_seed)
         except Exception:
             PowerShap_model = clone(self.model)
-        PowerShap_model.fit(X_train, Y_train)
+        PowerShap_model.fit(X_train, Y_train, **kwargs)
 
         # Calculate the shap values
         C_explainer = shap.explainers.Linear(PowerShap_model, X_train)
         return C_explainer.shap_values(X_val)
 
+# This support an Sklearn Pipeline Explainer, which will be a wrapper around a ShapExplainer
+class PipelineExplainer(ShapExplainer):
+
+    def __init__(self, model: Any):
+        from .shap_explainer_factory import ShapExplainerFactory 
+        """Create a Powershap explainer instance.
+
+        Parameters
+        ----------
+        model: Any
+            The  model from which powershap will use its shap values to perform feature
+            selection.
+
+        """
+        assert self.supports_model(model)
+        self.shap_explainer = ShapExplainerFactory.get_explainer(model=model.steps[-1][1])
+        self.model = model
+
+    @staticmethod
+    def supports_model(model) -> bool:
+        from sklearn.pipeline import Pipeline
+
+        return issubclass(type(model), Pipeline)
+
+    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
+        from sklearn.base import clone
+        from sklearn.pipeline import Pipeline
+        
+        # Because the ShapExplainer behavior is different for each model, we extract the model and only keep the preprocessing pipeline
+        powershap_pipeline = clone(Pipeline(self.model.steps[:-1]))
+
+        # 2. Build the parameter dictionary to set the random states to the random seed
+        params_to_set = {}
+        for step_name, step_estimator in powershap_pipeline.steps:
+            if 'random_state' in step_estimator.get_params():
+                # Format: 'step_name__parameter_name'
+                params_to_set[f'{step_name}__random_state'] = random_seed
+
+        # 3. Apply the parameters to the cloned pipeline
+        powershap_pipeline.set_params(**params_to_set)
+                
+        # We fit the pipeline here to be used to transform the data
+        powershap_pipeline.fit(X_train, Y_train, **kwargs)
+
+        # Get the transformed data from all the preceding steps
+        transformed_X_train = powershap_pipeline.transform(X_train)
+        transformed_X_val = powershap_pipeline.transform(X_val)
+
+        return self.shap_explainer._fit_get_shap(transformed_X_train, Y_train, transformed_X_val, Y_val, random_seed, **kwargs)
+
+
+    def validate_data(self, _estimator, X, y, **kwargs):
+        # The assumption here is that the used model is the limiting factor for validation of the data
+        return self.shap_explainer.validate_data(_estimator, X, y, **kwargs)
+    
+    def _get_more_tags(self):
+        return self.shap_explainer._get_more_tags()
+
 
 ### DEEP LEARNING
 
-
+# Tensorflow has been phased out and current version does not support deepLearning approach
+# TODO add support for Pytorch instead
 class DeepLearningExplainer(ShapExplainer):
     @staticmethod
     def supports_model(model) -> bool:
-        import tensorflow as tf  # ; import torch
+        # import tensorflow as tf  # ; import torch
 
         # import torch  ## TODO: do we support pytorch??
 
-        supported_models = [tf.keras.Model]  # , torch.nn.Module]
-        return isinstance(model, tuple(supported_models))
+        # supported_models = [tf.keras.Model]  # , torch.nn.Module]
+        # return isinstance(model, tuple(supported_models))
+        return False
+    
 
-    def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
-        import tensorflow as tf
+    # def _fit_get_shap(self, X_train, Y_train, X_val, Y_val, random_seed, **kwargs) -> np.array:
+    #     # import tensorflow as tf
 
-        # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
-        # Fit the model
-        PowerShap_model = tf.keras.models.clone_model(self.model)
-        metrics = kwargs.get("nn_metric")
-        PowerShap_model.compile(
-            loss=kwargs["loss"],
-            optimizer=kwargs["optimizer"],
-            metrics=metrics if metrics is None else [metrics],
-            # run_eagerly=True,
-        )
-        _ = PowerShap_model.fit(
-            X_train,
-            Y_train,
-            batch_size=kwargs["batch_size"],
-            epochs=kwargs["epochs"],
-            validation_data=(X_val, Y_val),
-            verbose=False,
-        )
-        # Calculate the shap values
-        C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
-        return C_explainer.shap_values(X_val)
+    #     # tf.compat.v1.disable_v2_behavior()  # https://github.com/slundberg/shap/issues/2189
+    #     # Fit the model
+    #     # PowerShap_model = tf.keras.models.clone_model(self.model)
+    #     # metrics = kwargs.get("nn_metric")
+    #     # PowerShap_model.compile(
+    #     #     loss=kwargs["loss"],
+    #     #     optimizer=kwargs["optimizer"],
+    #     #     metrics=metrics if metrics is None else [metrics],
+    #     #     # run_eagerly=True,
+    #     # )
+    #     # _ = PowerShap_model.fit(
+    #     #     X_train,
+    #     #     Y_train,
+    #     #     batch_size=kwargs["batch_size"],
+    #     #     epochs=kwargs["epochs"],
+    #     #     validation_data=(X_val, Y_val),
+    #     #     verbose=False,
+    #     # )
+    #     # # Calculate the shap values
+    #     # C_explainer = shap.DeepExplainer(PowerShap_model, X_train)
+    #     return C_explainer.shap_values(X_val)

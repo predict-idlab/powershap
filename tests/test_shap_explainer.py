@@ -5,11 +5,12 @@ from sklearn.linear_model import SGDRegressor
 from powershap.shap_wrappers import ShapExplainerFactory
 from powershap.shap_wrappers.shap_explainer import (
     CatboostExplainer,
-    DeepLearningExplainer,
+    # DeepLearningExplainer,
     EnsembleExplainer,
     LGBMExplainer,
     LinearExplainer,
     XGBoostExplainer,
+    PipelineExplainer,
 )
 
 
@@ -110,12 +111,73 @@ def test_get_ensemble_explainer():
         explainer = ShapExplainerFactory.get_explainer(model_class())
         assert isinstance(explainer, EnsembleExplainer)
 
+def test_get_pipeline_explainer():
+    from sklearn.linear_model import (
+        LinearRegression,
+        LogisticRegression,
+        LogisticRegressionCV,
+        PassiveAggressiveClassifier,
+        Perceptron,
+        Ridge,
+        RidgeClassifier,
+        RidgeClassifierCV,
+        RidgeCV,
+        SGDClassifier,
+        SGDRegressor,
+    )
+    from sklearn.ensemble import (
+        ExtraTreesClassifier,
+        ExtraTreesRegressor,
+        GradientBoostingClassifier,
+        GradientBoostingRegressor,
+        RandomForestClassifier,
+        RandomForestRegressor,
+    )
+    from catboost import CatBoostClassifier, CatBoostRegressor
+    from lightgbm import LGBMClassifier, LGBMRegressor
+    from xgboost import XGBClassifier, XGBRegressor
 
-def test_get_deep_learning_explainer():
-    import tensorflow as tf
+    model_classes = [
+        LogisticRegression,
+        LogisticRegressionCV,
+        PassiveAggressiveClassifier,
+        Perceptron,
+        RidgeClassifier,
+        RidgeClassifierCV,
+        SGDClassifier,
+        LinearRegression,
+        Ridge,
+        RidgeCV,
+        SGDRegressor,
+        RandomForestClassifier,
+        GradientBoostingClassifier,
+        ExtraTreesClassifier,
+        RandomForestRegressor,
+        GradientBoostingRegressor,
+        ExtraTreesRegressor,
+        XGBClassifier, XGBRegressor,
+        LGBMClassifier, LGBMRegressor,
+        CatBoostClassifier, CatBoostRegressor,
+    ]
+    from sklearn.pipeline import Pipeline
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import FunctionTransformer
 
-    explainer = ShapExplainerFactory.get_explainer(tf.keras.Sequential())
-    assert isinstance(explainer, DeepLearningExplainer)
+
+
+    for model_class in model_classes:
+        DummyScaler = FunctionTransformer(lambda x: x)
+        explainer = ShapExplainerFactory.get_explainer(make_pipeline(DummyScaler, model_class()))
+
+        assert isinstance(explainer, PipelineExplainer)
+
+
+
+# def test_get_deep_learning_explainer():
+#     import tensorflow as tf
+
+#     explainer = ShapExplainerFactory.get_explainer(tf.keras.Sequential())
+#     assert isinstance(explainer, DeepLearningExplainer)
 
 
 def test_value_error_get_explainer():

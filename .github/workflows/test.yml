@@ -9,14 +9,14 @@ on:
     paths:
       - "powershap/**"
       - "tests/**"
-      - "poetry.lock"
+      - "uv.lock"
       - ".github/workflows/test.yml"
   pull_request:
     branches: [ main ]
     paths:
       - "powershap/**"
       - "tests/**"
-      - "poetry.lock"
+      - "uv.lock"
       - ".github/workflows/test.yml"
 
 jobs:
@@ -26,54 +26,48 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest']  # TODO - do we add other OSes?
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: ['ubuntu-latest', 'windows-latest']  # TODO - do we add other OSes?
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     defaults:
       run:
         shell: bash
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        enable-cache: true
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        
+    - name: Install llvm on Ubuntu
+      if: runner.os == 'Linux'
+      run: sudo apt-get install llvm # Because https://github.com/slundberg/shap/issues/1854
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.5.1
-    - name: Cache poetry
-      id: cached-poetry-dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pypoetry/virtualenvs
-        key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}-python-${{ matrix.python-version }}
-    - run: poetry --version
+    - name: Install MSVC build tools on Windows
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v1
 
-    - run: sudo apt-get install llvm  # Because https://github.com/slundberg/shap/issues/1854
+
     - name: Install dependencies
-      run: poetry install --all-extras
-      # Do not use caching (anymore)
-#      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: uv sync --locked --all-extras --dev
 
-#     - name: Lint with flake8
-#       run: |
-#         # stop the build if there are Python syntax errors or undefined names
-#         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-
       run: |
-        poetry run pytest --cov=powershap --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov-report=xml tests
+        uv run pytest --cov=powershap --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov-report=xml tests
+
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: pytest-results-${{ matrix.python-version }}
-        path: junit/test-results-${{ matrix.python-version }}.xml
+        name: pytest-results-${{ matrix.python-version }}-${{matrix.os}}
+        path: junit/test-results-${{ matrix.python-version }}-${{matrix.os}}.xml
         # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
