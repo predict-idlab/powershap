@@ -12,7 +12,6 @@ import shap
 from numpy.random import RandomState
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import validate_data
-from .shap_explainer_factory import ShapExplainerFactory
 
 from sklearn.utils._tags import (
     ClassifierTags,
@@ -372,6 +371,7 @@ class LinearExplainer(ShapExplainer):
 class PipelineExplainer(ShapExplainer):
 
     def __init__(self, model: Any):
+        from .shap_explainer_factory import ShapExplainerFactory 
         """Create a Powershap explainer instance.
 
         Parameters
