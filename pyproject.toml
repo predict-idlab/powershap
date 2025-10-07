@@ -34,7 +34,7 @@ dependencies = [
     "catboost>=1.0.5",
     "statsmodels>=0.14.0",
     "pandas>=1.3",
-    "shap>=0.45.0,<0.46",
+    "shap>=0.46.0",
     "scikit-learn>=1.6",
 ]
 
